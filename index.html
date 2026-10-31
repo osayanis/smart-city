@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The City That Listens</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Mrs+Saint+Delafield&display=swap">
+<link rel="stylesheet" href="css/style.css">
+
+</head>
+<body>
+<div id="sky"></div>
+<canvas id="scene" aria-label="Animated 3D model of a town that can switch between ordinary and smart mode"></canvas>
+<div id="pins"></div>
+
+<header class="top">
+  <div class="brand"><span class="sig">Yanis</span><span class="sub">the smart city</span></div>
+  <div class="count glass" aria-live="polite"><span><b id="seen">0</b> / 12 <span class="wide">places visited</span></span><span class="bar"><i id="seenbar"></i></span></div>
+  <nav class="actions" aria-label="Controls">
+    <button class="btn" id="b-tour"><span class="g">▶</span><span class="lblt">Start the tour</span></button>
+    <button class="btn" id="b-book"><span class="g">☰</span><span class="lblt">Notebook</span></button>
+    <button class="btn" id="b-notes" aria-pressed="false"><span class="g">✎</span><span class="lblt">Notes</span></button>
+    <button class="btn opt" id="b-sound" aria-pressed="false"><span class="g">♪</span><span class="lblt">Sound</span></button>
+    <button class="btn opt" id="b-full" aria-label="Full screen"><span class="g">⤢</span></button>
+  </nav>
+</header>
+
+<section class="hud glass" aria-label="City dashboard">
+  <div class="switchrow">
+    <div><div class="t" id="mode-t">Ordinary town</div><div class="d" id="mode-d">Timers, fixed rounds, lights always on</div></div>
+    <button class="switch nudge" id="sw" role="switch" aria-checked="false" aria-label="Smart mode"><i></i></button>
+  </div>
+  <div class="meters">
+    <div class="meter"><div class="l">Cars waiting now</div><div class="v"><span id="m-wait">0</span><small>cars</small></div><canvas id="sp-wait"></canvas></div>
+    <div class="meter"><div class="l">Street lighting</div><div class="v"><span id="m-light">100</span><small>% power</small></div><canvas id="sp-light"></canvas></div>
+    <div class="meter"><div class="l">Bins overflowing</div><div class="v"><span id="m-bins">0</span><small>/ 6</small></div><canvas id="sp-bins"></canvas></div>
+    <div class="meter"><div class="l">Air pollution</div><div class="v"><span id="m-air">0</span><small>index</small></div><canvas id="sp-air"></canvas></div>
+  </div>
+  <div class="foot">Live numbers from the model · press <kbd>S</kbd> to compare</div>
+</section>
+
+<p class="hint">drag to turn · scroll to zoom · click a place · <kbd>←</kbd> <kbd>→</kbd> between stops · <kbd>S</kbd> smart mode</p>
+
+<aside class="panel glass" id="panel" data-open="false" aria-live="polite">
+  <div class="phead"><span class="step" id="p-step">Stop 1 of 12</span><button class="x" id="p-close" aria-label="Back to the whole city">✕</button></div>
+  <div class="pbody" id="p-body"></div>
+  <div class="pfoot">
+    <button class="btn" id="p-prev">← Previous</button>
+    <span class="pos" id="p-pos">1 / 12</span>
+    <button class="btn" id="p-next">Next →</button>
+  </div>
+</aside>
+
+<section class="notes glass" id="notes" hidden aria-label="Speaker notes">
+  <h3 class="lab"><span>Speaker notes · <span id="n-where">Introduction</span></span><kbd>N</kbd></h3>
+  <p id="n-text"></p>
+</section>
+
+<div class="overlay" id="book" hidden>
+  <div class="book glass" role="dialog" aria-modal="true" aria-labelledby="book-h">
+    <div class="bookhead">
+      <h2 id="book-h">The mayor's notebook</h2>
+      <button class="x" id="book-close" aria-label="Close the notebook">✕</button>
+    </div>
+    <p class="intro">The mayor asked three questions. Each place in the town answers one of them. Click a place to fly there.</p>
+    <div class="acts" id="book-acts"></div>
+    <p class="sources">Class documents: IESE Cities in Motion Index (2017) · Iberdrola, <em>What are the keys to turning a city into a smart city?</em> (2020), the 12 keys called "Document C" in the panels.<br>
+    Examples: Surtrac adaptive lights, Pittsburgh (figures reported by the Carnegie Mellon team) · OnDijon, Dijon Métropole (contract awarded in 2017) · Sidewalk Labs, Toronto Quayside (dropped in May 2020) · GDPR (EU, 2018).<br>
+    The numbers on the dashboard come from the model running on this page, not from a real town.</p>
+  </div>
+</div>
+
+<div class="letter" id="letter">
+  <div class="paper glass" role="dialog" aria-modal="true" aria-labelledby="letter-h">
+    <p class="from">From the IT department · to the mayor's office</p>
+    <h1 id="letter-h">Good evening, Mr. Mayor,</h1>
+    <p>You asked your IT technician whether our town should become a smart city. Instead of slides, I built you a model.</p>
+    <p>Right now it is an ordinary town. Lights turn red for empty streets. Bins overflow on one corner while the truck empties half-empty ones on the next. Streetlights burn all night for nobody.</p>
+    <p>Walk around it with me. You asked three questions:</p>
+    <ul class="q">
+      <li><span>I</span>Which problems can a smart city solve?</li>
+      <li><span>II</span>How can we be sure the data is safe?</li>
+      <li><span>III</span>How do we convince people?</li>
+    </ul>
+    <div><div class="sign">Yanis</div><div class="role">IT technician, town hall</div></div>
+    <div class="row">
+      <button class="cta" id="enter">Enter the town <span aria-hidden="true">→</span></button>
+      <span class="tips"><kbd>S</kbd> smart mode · <kbd>←</kbd> <kbd>→</kbd> places · <kbd>N</kbd> notes</span>
+    </div>
+  </div>
+</div>
+
+<div id="nogl" hidden><p>This model needs WebGL and the Three.js library.<br>Open this page in a recent Chrome, Edge, Firefox or Safari.</p></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="js/city.js"></script>
+</body>
+</html>
