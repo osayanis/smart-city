@@ -17,9 +17,9 @@
 
 <header class="top">
   <div class="brand"><span class="sig">Yanis</span><span class="sub">the smart city</span></div>
-  <div class="count glass" aria-live="polite"><span><b id="seen">0</b> / 12 <span class="wide">places visited</span></span><span class="bar"><i id="seenbar"></i></span></div>
+  <div class="count glass" aria-live="polite"><span><b id="seen">0</b> / <span id="total">11</span> <span class="wide">moments seen</span></span><span class="bar"><i id="seenbar"></i></span></div>
   <nav class="actions" aria-label="Controls">
-    <button class="btn" id="b-tour"><span class="g">▶</span><span class="lblt">Start the tour</span></button>
+    <button class="btn" id="b-tour"><span class="g">▶</span><span class="lblt">Start the day</span></button>
     <button class="btn" id="b-book"><span class="g">☰</span><span class="lblt">Notebook</span></button>
     <button class="btn" id="b-notes" aria-pressed="false"><span class="g">✎</span><span class="lblt">Notes</span></button>
     <button class="btn opt" id="b-sound" aria-pressed="false"><span class="g">♪</span><span class="lblt">Sound</span></button>
@@ -28,8 +28,9 @@
 </header>
 
 <section class="hud glass" aria-label="City dashboard">
+  <div class="clockrow"><span class="clk" id="clk">18:00</span><span class="clkl" id="clk-l">Sunset</span></div>
   <div class="switchrow">
-    <div><div class="t" id="mode-t">Ordinary town</div><div class="d" id="mode-d">Timers, fixed rounds, lights always on</div></div>
+    <div><div class="t" id="mode-t">Ordinary town</div><div class="d" id="mode-d">Grey, polluted, stuck in traffic. Press S to wake it up.</div></div>
     <button class="switch nudge" id="sw" role="switch" aria-checked="false" aria-label="Smart mode"><i></i></button>
   </div>
   <div class="meters">
@@ -41,14 +42,14 @@
   <div class="foot">Live numbers from the model · press <kbd>S</kbd> to compare</div>
 </section>
 
-<p class="hint">drag to turn · scroll to zoom · click a place · <kbd>←</kbd> <kbd>→</kbd> between stops · <kbd>S</kbd> smart mode</p>
+<p class="hint"><kbd>S</kbd> wake the town · <kbd>←</kbd> <kbd>→</kbd> moments of the day · drag to turn · scroll to zoom</p>
 
 <aside class="panel glass" id="panel" data-open="false" aria-live="polite">
-  <div class="phead"><span class="step" id="p-step">Stop 1 of 12</span><button class="x" id="p-close" aria-label="Back to the whole city">✕</button></div>
+  <div class="phead"><span class="step" id="p-step">Moment 1 of 11</span><button class="x" id="p-close" aria-label="Back to the whole city">✕</button></div>
   <div class="pbody" id="p-body"></div>
   <div class="pfoot">
     <button class="btn" id="p-prev">← Previous</button>
-    <span class="pos" id="p-pos">1 / 12</span>
+    <span class="pos" id="p-pos">1 / 11</span>
     <button class="btn" id="p-next">Next →</button>
   </div>
 </aside>
@@ -64,7 +65,7 @@
       <h2 id="book-h">The mayor's notebook</h2>
       <button class="x" id="book-close" aria-label="Close the notebook">✕</button>
     </div>
-    <p class="intro">The mayor asked three questions. Each place in the town answers one of them. Click a place to fly there.</p>
+    <p class="intro">One day in the life of a resident, in the same town, ordinary or smart. Click a moment to go there.</p>
     <div class="acts" id="book-acts"></div>
     <p class="sources">Class documents: IESE Cities in Motion Index (2017) · Iberdrola, <em>What are the keys to turning a city into a smart city?</em> (2020), the 12 keys called "Document C" in the panels.<br>
     Examples: Surtrac adaptive lights, Pittsburgh (figures reported by the Carnegie Mellon team) · OnDijon, Dijon Métropole (contract awarded in 2017) · Sidewalk Labs, Toronto Quayside (dropped in May 2020) · GDPR (EU, 2018).<br>
@@ -75,19 +76,18 @@
 <div class="letter" id="letter">
   <div class="paper glass" role="dialog" aria-modal="true" aria-labelledby="letter-h">
     <p class="from">From the IT department · to the mayor's office</p>
-    <h1 id="letter-h">Good evening, Mr. Mayor,</h1>
-    <p>You asked your IT technician whether our town should become a smart city. Instead of slides, I built you a model.</p>
-    <p>Right now it is an ordinary town. Lights turn red for empty streets. Bins overflow on one corner while the truck empties half-empty ones on the next. Streetlights burn all night for nobody.</p>
-    <p>Walk around it with me. You asked three questions:</p>
+    <h1 id="letter-h">Mr. Mayor, here is how we convince people.</h1>
+    <p>You asked me how to convince people that a smart city is good for their way of life. My answer: don’t talk to them about sensors. Show them their own day.</p>
+    <p>This is our town today: grey, polluted, stuck in traffic. Press the switch and watch it wake up, street by street. Then follow one resident from 7:30 in the morning to 10:30 at night.</p>
     <ul class="q">
       <li><span>I</span>Which problems can a smart city solve?</li>
       <li><span>II</span>How can we be sure the data is safe?</li>
-      <li><span>III</span>How do we convince people?</li>
+      <li class="main"><span>III</span>How do we convince people it is good for their way of life?</li>
     </ul>
     <div><div class="sign">Yanis</div><div class="role">IT technician, town hall</div></div>
     <div class="row">
       <button class="cta" id="enter">Enter the town <span aria-hidden="true">→</span></button>
-      <span class="tips"><kbd>S</kbd> smart mode · <kbd>←</kbd> <kbd>→</kbd> places · <kbd>N</kbd> notes</span>
+      <span class="tips"><kbd>S</kbd> wake the town · <kbd>←</kbd> <kbd>→</kbd> the day · <kbd>N</kbd> notes</span>
     </div>
   </div>
 </div>

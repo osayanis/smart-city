@@ -1,45 +1,20 @@
 /* Layout: the city fills the screen like a scale model on the mayor's desk; glass chrome sits in the corners; one reading panel slides in from the right */
 :root{
-  --bg:#1c120d; --bg-2:#3a2418; --glass:#261912dc; --glass-2:#ffe2be12; --line:#ffd6aa2e;
+  /* Layout: the town fills the screen like a scale model on the mayor's desk; dark glass chrome in the corners; one reading panel on the right */
+  --bg:#1c120d; --bg-2:#3a2418; --glass:#1d1410e0; --glass-2:#ffe2be12; --line:#ffd6aa2e;
   --text:#f1ece2; --muted:#bdb6a8; --accent:#f472b6; --on-accent:#1c120d; --warm:#ffb46b;
   --good:#8fd6a8; --warn:#f2b45a; --bad:#ff8a7a;
   --font:"Bricolage Grotesque",system-ui,sans-serif;
   --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
   --sign:"Mrs Saint Delafield","Brush Script MT","Segoe Script",cursive;
-  /* scene colours, read by WebGL */
-  --s-fog:#2a1a12; --s-smog:#4d3d30; --s-sun:#ff9a5a; --s-sun-i:1.55; --s-hemi-sky:#8f7fa8; --s-hemi-ground:#2a1a12; --s-hemi-i:1.05;
-  --s-grass:#3d5537; --s-walk:#6d5c50; --s-pave:#7d6a5c; --s-road:#2a2420; --s-mark:#c9b9a1; --s-edge:#241812; --s-base:#170e0a;
-  --s-b1:#806a59; --s-b2:#6a574b; --s-b3:#9a765a; --s-white:#d9cfc2; --s-stone:#b9a58e; --s-dark:#2d2729; --s-roof:#3e332d; --s-tile:#7a3f2e;
-  --s-tree:#4f6b43; --s-trunk:#4a3426; --s-court:#7b4f3a; --s-panel:#1f2c4a; --s-bin:#3f4b44;
-  --s-window:#ffbf73; --s-glow:1; --s-lamp:#ffcf8a; --s-water:#3c6f8a;
+  /* the model's materials, lit by the time of day */
+  --s-grass:#86a866; --s-walk:#d9c5ae; --s-pave:#e6d5c0; --s-road:#5e5550; --s-mark:#f3ead9; --s-edge:#8a6448; --s-base:#3a2a20;
+  --s-b1:#e2cdb6; --s-b2:#cfb093; --s-b3:#e6b48a; --s-white:#f6f0e6; --s-stone:#e7d8c2; --s-dark:#4a4446; --s-roof:#9a7c66; --s-tile:#b85c42;
+  --s-tree:#6f9a52; --s-trunk:#7a5640; --s-court:#cf8058; --s-panel:#24365e; --s-bin:#55695d;
+  --s-window:#ffc887; --s-lamp:#ffd49a; --s-water:#6aa6c4;
   color-scheme:dark;
 }
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    --bg:#f3dcc0; --bg-2:#ffd9a8; --glass:#fff8ece6; --glass-2:#5a32140c; --line:#5a32142b;
-    --text:#24170f; --muted:#6a5a4b; --accent:#c2337a; --on-accent:#ffffff; --warm:#b4561b;
-    --good:#2f7d55; --warn:#a8650c; --bad:#b4361f;
-    --s-fog:#f2c79c; --s-smog:#c8b08c; --s-sun:#fff1dc; --s-sun-i:1.9; --s-hemi-sky:#fff1de; --s-hemi-ground:#b98d6b; --s-hemi-i:.95;
-    --s-grass:#9dbb7c; --s-walk:#e6d2bb; --s-pave:#efe1cf; --s-road:#77695f; --s-mark:#f6ecdc; --s-edge:#c39a77; --s-base:#a77d5c;
-    --s-b1:#ead8c4; --s-b2:#d8bea5; --s-b3:#e8b98c; --s-white:#fbf6ee; --s-stone:#e9dcc8; --s-dark:#4a4446; --s-roof:#bfa38a; --s-tile:#c0654a;
-    --s-tree:#86a866; --s-trunk:#8a6448; --s-court:#d98f62; --s-panel:#2d4373; --s-bin:#5d7366;
-    --s-window:#ffd39a; --s-glow:.35; --s-lamp:#ffe0b0; --s-water:#7fb6cc;
-    color-scheme:light;
-  }
-}
-:root[data-theme="light"]{
-  --bg:#f3dcc0; --bg-2:#ffd9a8; --glass:#fff8ece6; --glass-2:#5a32140c; --line:#5a32142b;
-  --text:#24170f; --muted:#6a5a4b; --accent:#c2337a; --on-accent:#ffffff; --warm:#b4561b;
-  --good:#2f7d55; --warn:#a8650c; --bad:#b4361f;
-  --s-fog:#f2c79c; --s-smog:#c8b08c; --s-sun:#fff1dc; --s-sun-i:1.9; --s-hemi-sky:#fff1de; --s-hemi-ground:#b98d6b; --s-hemi-i:.95;
-  --s-grass:#9dbb7c; --s-walk:#e6d2bb; --s-pave:#efe1cf; --s-road:#77695f; --s-mark:#f6ecdc; --s-edge:#c39a77; --s-base:#a77d5c;
-  --s-b1:#ead8c4; --s-b2:#d8bea5; --s-b3:#e8b98c; --s-white:#fbf6ee; --s-stone:#e9dcc8; --s-dark:#4a4446; --s-roof:#bfa38a; --s-tile:#c0654a;
-  --s-tree:#86a866; --s-trunk:#8a6448; --s-court:#d98f62; --s-panel:#2d4373; --s-bin:#5d7366;
-  --s-window:#ffd39a; --s-glow:.35; --s-lamp:#ffe0b0; --s-water:#7fb6cc;
-  color-scheme:light;
-}
-
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -49,7 +24,7 @@ body{margin:0;overflow:hidden;background:var(--bg);color:var(--text);font-family
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-#sky{position:fixed;inset:0;background:radial-gradient(120% 85% at 50% 28%,var(--bg-2) 0%,var(--bg) 62%)}
+#sky{position:fixed;inset:0;background:linear-gradient(180deg,var(--bg-2),var(--bg))}
 #scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #scene.drag{cursor:grabbing}
 #scene.hot{cursor:pointer}
@@ -226,3 +201,21 @@ body.panel-open .notes{left:max(16px,env(safe-area-inset-left,0px));transform:no
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
 }
+
+/* day + comparison */
+.clockrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.clk{font-family:var(--mono);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+.clkl{font-size:12px;color:var(--muted)}
+.eyebrow .tm{color:var(--text);font-weight:600}
+.vshead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.vshead .seg{margin-top:0}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vs>div{padding:12px 13px;border-radius:14px;border:1px solid var(--line);display:grid;gap:7px;align-content:start;min-width:0}
+.vs .old{background:color-mix(in srgb,var(--muted) 9%,transparent)}
+.vs .new{background:color-mix(in srgb,var(--accent) 10%,transparent);border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
+.vs p,.vs li{font-size:14.5px;line-height:1.5;margin:0}
+.vs ul{gap:5px}
+.foryou p{font-family:var(--serif);font-size:28px;line-height:1.12;text-wrap:balance}
+.paper .q li.main{color:var(--accent)}
+body:not(.is-smart) .switch{border-color:color-mix(in srgb,var(--accent) 60%,transparent)}
+@media (max-width:520px){.vs{grid-template-columns:1fr}}
