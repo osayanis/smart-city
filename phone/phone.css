@@ -49,6 +49,15 @@ h1,h2{font-weight:400;margin:0}
 .how b{font-size:22px}
 .privacy{display:flex;gap:10px;align-items:flex-start;margin:6px 0 0;font-size:13.5px;color:var(--muted)}
 
+/* let go: the talk started again */
+.ended{display:grid;gap:12px;padding:24px 4px;text-align:center;justify-items:center}
+.ended .icon{margin:0;font-size:64px}
+.ended h1{font-family:var(--serif);font-size:clamp(40px,12vw,56px);line-height:.95}
+.ended .lead{margin:0;font-size:18px}
+.ended .how1{display:flex;gap:10px;align-items:center;margin:6px 0 0;padding:14px 16px;border-radius:16px;background:var(--glass);border:1px solid var(--line);text-align:left}
+.ended .how1 b{font-size:22px}
+@media (min-width:760px){.ended{grid-column:1 / -1;max-width:560px;justify-self:center}}
+
 /* now on the board */
 .now{position:relative;padding:18px 18px 20px;border-radius:24px;background:var(--glass);border:1px solid var(--line);overflow:hidden}
 .now::before{content:"";position:absolute;inset:0 0 auto;height:3px;background:var(--part)}

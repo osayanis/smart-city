@@ -83,7 +83,7 @@
   const es = new EventSource('/api/events?role=board');
   let firstHello = true;
   es.addEventListener('hello', e => { phoneUrl = JSON.parse(e.data).phoneUrl; liveBtn.hidden = false; setQr(); syncJoin(); pushState(); if (firstHello && beat && beat.id === 'title') resetPolls(); firstHello = false; });
-  es.addEventListener('reset', () => { results = {}; box.dataset.key = ''; syncPoll(); });
+  es.addEventListener('reset', e => { phoneUrl = JSON.parse(e.data).phoneUrl; setQr(); results = {}; box.dataset.key = ''; syncPoll(); });
   es.addEventListener('count', e => { const n = JSON.parse(e.data).phones; liveN.textContent = n; for (const el of document.querySelectorAll('[data-count]')) el.textContent = n; });
   es.addEventListener('results', e => { results = JSON.parse(e.data); syncPoll(); });
   es.addEventListener('react', e => react(JSON.parse(e.data).emoji));

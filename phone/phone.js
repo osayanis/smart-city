@@ -11,7 +11,8 @@
   let pid = store.get('ph-id');
   if (!pid) { pid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^a-zA-Z0-9-]/g, ''); store.set('ph-id', pid); }
   let lang = store.get('ph-lang-choice') || 'en';   // the talk is in English: French only if someone asks for it
-  let state = null, results = {}, myVotes = store.get('ph-votes') || {};
+  let state = null, results = {}, myVotes = store.get('ph-votes') || {}, es = null;
+  const token = new URLSearchParams(location.search).get('s') || '';   // which session this QR code opened
 
   const T = {
     en: { welcomeEyebrow: 'English oral · Smart cities', welcomeTitle: 'You’re in.', welcomeLead: 'Keep this page open: it follows the presentation, moment by moment.',
@@ -19,7 +20,7 @@
       how3: 'Answer the polls and quizzes. Results appear live.', privacy: 'No name, no account, no tracking. Your votes stay in the presenter’s computer memory and disappear after the talk.',
       tech: 'Behind the scene', you: 'For you', lostLabel: 'Tom’s lost time today', poll: 'Poll', quiz: 'Quiz', votes: n => `${n} ${n === 1 ? 'vote' : 'votes'}`,
       change: 'Tap another answer to change your vote.', right: '✓ Right answer!', wrong: a => `✗ Not quite. The answer: ${a}`, live: 'Live', off: 'Reconnecting…',
-      calcTitle: 'And you?', calcQ: 'How many minutes do you lose every day (traffic, parking, queues)?',
+      ended: 'Session over', endedLead: 'Thanks for following! The presentation has started again.', endedHow: 'To join again, scan the new QR code on the board.', calcTitle: 'And you?', calcQ: 'How many minutes do you lose every day (traffic, parking, queues)?',
       calcY: h => `That’s <b>${h}</b> hours a year.`, calcS: (b, d) => `In our story, the smart town cut Tom’s lost time by 77%. For you, that would give back about ${b} hours a year: ${d}.`,
       days: d => `${d} full ${d === 1 ? 'day' : 'days'}`, thanks: 'Thank you for following along!', waiting: 'Waiting for the board…' },
     fr: { welcomeEyebrow: 'Oral d’anglais · Smart cities', welcomeTitle: 'C’est parti.', welcomeLead: 'Gardez cette page ouverte : elle suit la présentation, moment par moment.',
@@ -27,7 +28,7 @@
       how3: 'Répondez aux sondages et aux quiz. Les résultats s’affichent en direct.', privacy: 'Pas de nom, pas de compte, pas de pistage. Vos votes restent dans la mémoire de l’ordinateur du présentateur et disparaissent après l’oral.',
       tech: 'Dans les coulisses', you: 'Pour vous', lostLabel: 'Temps perdu par Tom', poll: 'Sondage', quiz: 'Quiz', votes: n => `${n} vote${n > 1 ? 's' : ''}`,
       change: 'Touchez une autre réponse pour changer votre vote.', right: '✓ Bonne réponse !', wrong: a => `✗ Pas tout à fait. La réponse : ${a}`, live: 'En direct', off: 'Reconnexion…',
-      calcTitle: 'Et vous ?', calcQ: 'Combien de minutes perdez-vous chaque jour (bouchons, parking, files d’attente) ?',
+      ended: 'Session terminée', endedLead: 'Merci d’avoir suivi ! La présentation a recommencé.', endedHow: 'Pour revenir, scannez le nouveau QR code au tableau.', calcTitle: 'Et vous ?', calcQ: 'Combien de minutes perdez-vous chaque jour (bouchons, parking, files d’attente) ?',
       calcY: h => `Ça fait <b>${h}</b> heures par an.`, calcS: (b, d) => `Dans notre histoire, la ville intelligente a réduit de 77 % le temps perdu par Tom. Pour vous, ça ferait environ ${b} heures de gagnées par an : ${d}.`,
       days: d => `${d} jour${d > 1 ? 's' : ''} entier${d > 1 ? 's' : ''}`, thanks: 'Merci d’avoir suivi !', waiting: 'En attente du tableau…' },
   };
@@ -38,7 +39,7 @@
     lang = l; document.documentElement.lang = l;
     $('#l-en').setAttribute('aria-pressed', String(l === 'en')); $('#l-fr').setAttribute('aria-pressed', String(l === 'fr'));
     for (const el of document.querySelectorAll('[data-t]')) el.textContent = t(el.dataset.t);
-    $('#status-t').textContent = t($('#status').classList.contains('off') ? 'off' : 'live');
+    $('#status-t').textContent = t(!$('#ended').hidden ? 'ended' : $('#status').classList.contains('off') ? 'off' : 'live');
     render(false);
   }
   $('#l-en').onclick = () => { store.set('ph-lang-choice', 'en'); setLang('en'); }; $('#l-fr').onclick = () => { store.set('ph-lang-choice', 'fr'); setLang('fr'); };
@@ -53,6 +54,7 @@
   const fmtLost = m => m >= 60 ? `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')}` : `${Math.round(m)} min`;
   let shownId = null, shownPoll = null;
   function render(animate = true) {
+    if (!$('#ended').hidden) return;
     const s = state, title = !s || s.id === 'title';
     $('#welcome').hidden = !title; $('#now').hidden = title;
     if (title) $('#tech').hidden = $('#you').hidden = true;
@@ -100,7 +102,7 @@
     myVotes[p.id] = k; store.set('ph-votes', myVotes);
     results[p.id] = results[p.id] || p.options.map(() => 0);
     renderPoll(); wake();
-    fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid, poll: p.id, choice: k }) }).catch(() => {});
+    fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid, s: token, poll: p.id, choice: k }) }).catch(() => {});
   }
 
   /* your time */
@@ -123,7 +125,7 @@
     f.addEventListener('animationend', () => f.remove());
     if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
     wake();
-    fetch('/api/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid, emoji: b.dataset.e }) }).catch(() => {});
+    fetch('/api/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid, s: token, emoji: b.dataset.e }) }).catch(() => {});
   });
 
   /* keep the screen on while following (where the browser allows it) */
@@ -133,10 +135,21 @@
 
   /* live connection */
   const status = $('#status');
+  // let go by the board (it started again) or opened from an old QR code
+  function ended() {
+    if (es) es.close(); es = null; state = null;
+    myVotes = {}; store.set('ph-votes', myVotes);
+    for (const id of ['welcome', 'now', 'tech', 'you', 'poll', 'calc', 'thanks', 'reacts']) $('#' + id).hidden = true;
+    $('#ended').hidden = false; $('#prog-i').style.width = '0';
+    status.classList.add('off'); $('#status-t').textContent = t('ended');
+    if (lock) { lock.release().catch(() => {}); lock = null; }
+  }
   function connect() {
-    const es = new EventSource('/api/events?role=phone');
+    if (!token) return ended();
+    es = new EventSource('/api/events?role=phone&s=' + encodeURIComponent(token));
+    es.addEventListener('ended', ended);
     es.onopen = () => { status.classList.remove('off'); $('#status-t').textContent = t('live'); };
-    es.onerror = () => { status.classList.add('off'); $('#status-t').textContent = t('off'); };
+    es.onerror = () => { if (!es) return; status.classList.add('off'); $('#status-t').textContent = t('off'); };
     es.addEventListener('state', e => { state = JSON.parse(e.data); render(true); });
     es.addEventListener('results', e => { results = JSON.parse(e.data); renderPoll(); });
     // a new session (the board went back to the start, or the server restarted): forget the old answers

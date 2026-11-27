@@ -1,7 +1,7 @@
 // Local server for the talk: serves the board (http://localhost:8080) and the phone page (http://<this computer>:8080/phone),
 // and keeps them in sync with Server-Sent Events. No dependencies, nothing written to disk: votes live in memory only.
 'use strict';
-const http = require('http'), fs = require('fs'), path = require('path'), os = require('os'), { execFile } = require('child_process');
+const http = require('http'), crypto = require('crypto'), fs = require('fs'), path = require('path'), os = require('os'), { execFile } = require('child_process');
 const QR = require('./js/qr.js');
 const POLLS = require('./js/polls.js');
 
@@ -19,14 +19,15 @@ function addresses() {
   return out.sort((a, b) => rank(a.ip) - rank(b.ip));
 }
 const lanIp = () => (addresses()[0] || { ip: 'localhost' }).ip;
-const phoneUrl = () => process.env.PHONE_URL || `http://${lanIp()}:${PORT}/phone/`;
+const newToken = () => crypto.randomBytes(3).toString('hex');   // 6 characters, in the QR code: a new one every time we start again
+const phoneUrl = () => (process.env.PHONE_URL || `http://${lanIp()}:${PORT}/phone/`) + '?s=' + session;
 function isThisComputer(req) {
   const ip = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
   return ip === '127.0.0.1' || ip === '::1' || addresses().some(a => a.ip === ip);
 }
 
 /* shared state */
-let session = Date.now().toString(36);   // changes at every reset, so phones forget their old answers
+let session = newToken();   // changes at every restart of the talk: old QR codes and old phones are let go
 let state = null;                       // the moment on the board, sent by the board
 const votes = new Map();                // poll id -> Map(phone id -> choice)
 const lastReact = new Map();            // phone id -> time, to keep reactions reasonable
@@ -82,6 +83,10 @@ const server = http.createServer(async (req, res) => {
       const role = url.searchParams.get('role') === 'board' ? 'board' : 'phone';
       if (role === 'board' && !isThisComputer(req)) return json(res, 403, { error: 'The board runs on the presenting computer.' });
       if (phones.size > 400 && role === 'phone') return json(res, 503, { error: 'full' });
+      if (role === 'phone' && url.searchParams.get('s') !== session) {   // an old QR code, or a phone that was let go
+        res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store' });
+        res.write('retry: 600000\n\n'); send(res, 'ended', {}); return res.end();
+      }
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
       res.write('retry: 2000\n\n');
       const set = role === 'board' ? boards : phones; set.add(res);
@@ -111,13 +116,16 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/api/reset' && req.method === 'POST') {
       if (!isThisComputer(req)) return json(res, 403, { error: 'no' });
-      votes.clear(); lastReact.clear(); session = Date.now().toString(36);
-      const r = results(), msg = { session };
-      broadcast(phones, 'reset', msg); broadcast(boards, 'reset', msg); broadcast(phones, 'results', r); broadcast(boards, 'results', r);
+      votes.clear(); lastReact.clear(); session = newToken();
+      for (const ph of phones) { send(ph, 'ended', {}); try { ph.end(); } catch (e) {} }   // everyone is let go
+      phones.clear();
+      broadcast(boards, 'reset', { phoneUrl: phoneUrl() }); broadcast(boards, 'results', results()); broadcast(boards, 'count', counts());
+      console.log(`\n  Nouvelle session : tout le monde a été déconnecté. Nouveau lien : ${phoneUrl()}\n\n` + QR.terminal(phoneUrl()) + '\n');
       return json(res, 200, { ok: true });
     }
     if (p === '/api/vote' && req.method === 'POST') {
       const b = await readJson(req), poll = POLLS.find(q => q.id === b.poll), c = +b.choice;
+      if (b.s !== session) return json(res, 410, { error: 'ended' });
       if (!validId(b.pid) || !poll || !Number.isInteger(c) || c < 0 || c >= poll.options.length) return json(res, 400, { error: 'bad vote' });
       if (!votes.has(poll.id)) votes.set(poll.id, new Map());
       votes.get(poll.id).set(b.pid, c); pushResults();
@@ -125,6 +133,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/api/react' && req.method === 'POST') {
       const b = await readJson(req), now = Date.now();
+      if (b.s !== session) return json(res, 410, { error: 'ended' });
       if (!validId(b.pid) || !REACTIONS.includes(b.emoji)) return json(res, 400, { error: 'bad reaction' });
       if (now - (lastReact.get(b.pid) || 0) < 350) return json(res, 429, { error: 'slow down' });
       lastReact.set(b.pid, now);
