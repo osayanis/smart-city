@@ -1,0 +1,11 @@
+{
+  "name": "one-day-two-towns",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Oral d'anglais smart city : la ville 3D au tableau, et le public qui suit sur son téléphone",
+  "scripts": {
+    "start": "node server.js --open",
+    "serve": "node server.js"
+  },
+  "engines": { "node": ">=18" }
+}

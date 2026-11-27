@@ -23,6 +23,22 @@ En bas de l'écran, la phrase en sous-titre est **ce qu'on dit à l'oral** (en a
 Ouvrir `index.html` dans Chrome (double-clic). Aucune installation, tout marche hors ligne.
 Seules les polices viennent de Google Fonts : sans internet, le navigateur prend des polices système.
 
+## Mode interactif : le public suit sur son téléphone
+
+```
+npm start
+```
+
+Le serveur (Node 18 ou plus, aucune dépendance à installer) ouvre le tableau sur `http://localhost:8080` et affiche dans le terminal l'adresse et le QR code des téléphones.
+L'ordinateur et les téléphones doivent être sur le **même Wi-Fi**. Au premier lancement, macOS demande d'autoriser les connexions entrantes pour `node` : cliquer sur « Autoriser ».
+
+- **Au tableau** : le QR code est sur l'écran titre ; ensuite, `Q` (ou le bouton 📱 en haut, qui compte les téléphones connectés) l'affiche en grand. Les réactions du public s'envolent à droite, et les résultats des sondages s'affichent en haut à gauche pendant le moment concerné (`V` pour les masquer).
+- **Sur les téléphones** : la page suit le tableau moment par moment, avec la phrase dite (et sa traduction en FR), « Dans les coulisses » (comment ça marche) et « Pour vous » (ce que ça change), le temps perdu par Tom, 6 emojis pour réagir, 5 sondages et 2 quiz, puis à la fin un calcul « Et vous ? » du temps perdu par an.
+- **Vie privée** : pas de nom ni de compte ; les votes restent en mémoire dans le serveur et disparaissent quand on l'arrête. Seul l'ordinateur qui présente peut changer de moment.
+- Si les téléphones n'arrivent pas à se connecter, le Wi-Fi de l'école isole sans doute les appareils : utiliser le partage de connexion d'un téléphone (l'ordinateur et le public dessus), puis relancer `npm start`. Autre port : `PORT=8081 npm start`.
+
+Ouverte directement (double-clic sur `index.html`), la présentation marche toujours, sans la partie téléphone.
+
 ## Pendant l'oral
 
 | Touche | Action |
@@ -35,6 +51,8 @@ Seules les polices viennent de Google Fonts : sans internet, le navigateur prend
 | `M` | son (réveil, klaxon, toux, notifications) |
 | `F` | plein écran |
 | `Début` / `Fin` | premier / dernier moment |
+| `Q` | QR code en grand pour les téléphones (mode interactif) |
+| `V` | masquer / afficher les résultats de sondage |
 
 On peut ouvrir directement un moment avec son numéro : `index.html#18`. La partie 3 commence à `#30`, la conclusion à `#43`.
 La souris tourne la caméra (glisser) et zoome (molette) ; le moment suivant remet le bon cadrage.
@@ -53,5 +71,10 @@ Les deux chiffres réels sont cités avec leur source à l'écran :
 - `css/style.css` : le style repris de yanis.pro (polices, couleurs, verre), les sous-titres et les bulles
 - `js/city.js` : la ville en Three.js, la maison de Tom, Tom et ses poses, sa voiture, le parking, l'île de l'énergie (éoliennes, panneaux sur trackers, batteries, méthaniseur, déchèterie, camion), l'onde ordinaire → smart, l'heure du jour, la simulation (feux, voitures, bus, camion poubelle, lampadaires) et les 44 moments de l'histoire (tableau `B`)
 - `vendor/three.min.js` : Three.js r128
+- `server.js` : le serveur local (fichiers, synchronisation en direct par Server-Sent Events, votes, réactions)
+- `js/live.js` : la partie live du tableau (QR, compteur, réactions, résultats)
+- `js/qr.js` : un générateur de QR code fait maison (pas besoin d'internet)
+- `js/polls.js` : les sondages et les quiz, et le moment où chacun s'ouvre
+- `phone/` : la page des téléphones (`content.js` = les textes « Dans les coulisses » et « Pour vous » de chaque moment)
 
 Pour changer une phrase, il suffit de modifier `cap` (anglais) ou `fr` (français) dans le tableau `B` de `js/city.js`.

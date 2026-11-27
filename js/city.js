@@ -1697,35 +1697,35 @@ function windNow(a) { EN.windA = a; for (const t of TURBINES) { t.yaw = a + Math
 function atQuay() { EN.gateT = EN.gate = 1; if (!(tcar.mode === 'park' && Math.hypot(tcar.x - EX - 14.2, tcar.z - EZ - 12.7) < .5)) carPark(EX + 14.2, EZ + 12.7, 90); tcar.driver = false; }
 
 const B = [
-  { part: 'intro', clock: '06:30', tod: 'dawn', smart: false, over: 'title', view: OVER, drift: .035, place: '',
+  { id: 'title', part: 'intro', clock: '06:30', tod: 'dawn', smart: false, over: 'title', view: OVER, drift: .035, place: '',
     cap: '', fr: '', setup() { bedScene(); } },
-  { part: 'intro', clock: '06:30', tod: 'dawn', smart: false, view: V([-4, 0, 2], 30, 32, 84), drift: .03, place: 'Our town',
+  { id: 'town', part: 'intro', clock: '06:30', tod: 'dawn', smart: false, view: V([-4, 0, 2], 30, 32, 84), drift: .03, place: 'Our town',
     cap: 'This is our town. A normal town, like many others: traffic jams, pollution, and a town hall that closes at five.',
     fr: 'Voici notre ville. Une ville normale, comme beaucoup d’autres : des bouchons, de la pollution, et une mairie qui ferme à 17 h.',
     setup() { bedScene(); } },
 
   /* ---------------- Part 1: an ordinary day */
-  { part: 'p1', clock: '06:45', tod: 'dawn', smart: false, view: BEDV, place: 'Tom’s bedroom',
+  { id: 'p1-asleep', part: 'p1', clock: '06:45', tod: 'dawn', smart: false, view: BEDV, place: 'Tom’s bedroom',
     cap: 'And this is Tom. It’s 6:45 and he is still asleep. Today, we are going to follow him all day long.',
     fr: 'Et voici Tom. Il est 6 h 45 et il dort encore. Aujourd’hui, on va le suivre toute la journée.',
     setup() { bedScene(); cue(.5, sleep); } },
-  { part: 'p1', clock: '06:45', tod: 'dawn', smart: false, view: BEDV, place: 'Tom’s bedroom',
+  { id: 'p1-alarm', part: 'p1', clock: '06:45', tod: 'dawn', smart: false, view: BEDV, place: 'Tom’s bedroom',
     cap: 'His alarm rings. Brrr… the house is cold: the old heating only starts at 7 o’clock, every day.',
     fr: 'Son réveil sonne. Brrr… la maison est froide : le vieux chauffage ne s’allume qu’à 7 h, tous les jours.',
     setup() {
       bedScene(); cue(.2, ring); cue(1.5, () => tomDo('situp')); cue(2.3, () => houseLight(1));
       cue(2.7, () => { tomDo('shiver'); bub('🥶', atTom()); }); cue(3.4, () => bub('16 °C', THERMO, { cls: 'sign bad' }));
     } },
-  { part: 'p1', clock: '07:30', tod: 'morning', smart: false, view: V(null, -150, 26, 12), follow: tomOrCar, place: 'Tom’s street',
+  { id: 'p1-car', part: 'p1', clock: '07:30', tod: 'morning', smart: false, view: V(null, -150, 26, 12), follow: tomOrCar, place: 'Tom’s street',
     cap: '7:30. Tom takes his car to go to work. And… red light.',
     fr: '7 h 30. Tom prend sa voiture pour aller travailler. Et… feu rouge.',
     setup() { leaveHome(); force(-16, 16, 'z'); },
     run(t, dt, st) { if (!st.mad && tcar.mode === 'sim' && tcar.v < .15 && t > 4) { st.mad = 1; bub('😤', atCar); honk(); } } },
-  { part: 'p1', clock: '07:40', tod: 'morning', smart: false, view: V(null, 100, 20, 9, [1.4, 0, 0]), follow: carPos, place: 'First crossroads',
+  { id: 'p1-wait', part: 'p1', clock: '07:40', tod: 'morning', smart: false, view: V(null, 100, 20, 9, [1.4, 0, 0]), follow: carPos, place: 'First crossroads',
     cap: 'These lights work on a timer: they don’t see the traffic. So Tom waits… with his engine running.',
     fr: 'Ces feux marchent avec une minuterie : ils ne voient pas la circulation. Alors Tom attend… moteur allumé.',
     setup() { ensureSim(-19.4); force(-16, 16, 'z'); cue(.5, honk); cue(2.4, () => bub('😤', atCar)); cue(4.2, honk); } },
-  { part: 'p1', clock: '07:55', tod: 'morning', smart: false, lost: 20, view: V(null, -95, 32, 15, [3, 0, 0]), follow: carPos, place: 'Main road',
+  { id: 'p1-roads', part: 'p1', clock: '07:55', tod: 'morning', smart: false, lost: 20, view: V(null, -95, 32, 15, [3, 0, 0]), follow: carPos, place: 'Main road',
     cap: 'And it’s the same at every crossroads. In total, Tom waits 20 minutes at red lights.',
     fr: 'Et c’est pareil à chaque carrefour. Au total, Tom attend 20 minutes aux feux rouges.',
     setup() { ensureSim(-19.4); force(-16, 16, 'z'); force(0, 16, 'z'); cue(.6, () => force(-16, 16, 'x')); },
@@ -1733,11 +1733,11 @@ const B = [
       if (t > 1 && tcar.x > -12.5) force(-16, 16, null);
       if (!st.sad && t > 3 && tcar.mode === 'sim' && tcar.v < .15) { st.sad = 1; bub('😩', atCar); honk(); }
     } },
-  { part: 'p1', clock: '08:20', tod: 'morning', smart: false, lost: 32, view: V([24.4, .5, 8.2], 18, 50, 25), place: 'The office car park',
+  { id: 'p1-parking', part: 'p1', clock: '08:20', tod: 'morning', smart: false, lost: 32, view: V([24.4, .5, 8.2], 18, 50, 25), place: 'The office car park',
     cap: '8:20. The car park is full. Tom drives around… and around… and around again.',
     fr: '8 h 20. Le parking est plein. Tom tourne… et tourne… et tourne encore.',
     setup() { lotSet(false); tomHide(); tcar.driver = true; carGo(LOT_ENTRY, 3.4, null, { loop: LOOP }); cue(2.5, () => bub('❓', atCar)); } },
-  { part: 'p1', clock: '08:32', tod: 'morning', smart: false, view: V(null, 22, 42, 15), follow: tomOrCar, place: 'The office car park',
+  { id: 'p1-late', part: 'p1', clock: '08:32', tod: 'morning', smart: false, view: V(null, 22, 42, 15), follow: tomOrCar, place: 'The office car park',
     cap: 'Finally, a free space! But Tom is half an hour late, and his day has only just started.',
     fr: 'Enfin une place ! Mais Tom a une demi-heure de retard, et sa journée ne fait que commencer.',
     setup() {
@@ -1753,16 +1753,16 @@ const B = [
         }, { fromHere: true, keepSpeed: true });
       } };
     } },
-  { part: 'p1', clock: '12:30', tod: 'noon', smart: false, view: LUNCH, place: 'Lunch break',
+  { id: 'p1-lunch', part: 'p1', clock: '12:30', tod: 'noon', smart: false, view: LUNCH, place: 'Lunch break',
     cap: '12:30. Lunch break. But look at the bins: they are overflowing. The truck only comes on Thursdays, full or not.',
     fr: '12 h 30. Pause déjeuner. Mais regardez les poubelles : elles débordent. Le camion ne passe que le jeudi, pleines ou pas.',
     setup() { tomPlace(-4.48, 8.2, 90, 'eat', .25); tom.prop = 'food'; binsMode = 'full'; cue(2, () => bub('🤢', atTom())); } },
-  { part: 'p1', clock: '12:40', tod: 'noon', smart: false, view: V([-4.3, .95, 8.2], 78, 13, 5), place: 'Lunch break',
+  { id: 'p1-cough', part: 'p1', clock: '12:40', tod: 'noon', smart: false, view: V([-4.3, .95, 8.2], 78, 13, 5), place: 'Lunch break',
     cap: 'And the air is heavy: all these cars waiting with their engines on. Tom coughs.',
     fr: 'Et l’air est lourd : toutes ces voitures qui attendent moteur allumé. Tom tousse.',
     setup() { tomPlace(-4.48, 8.2, 90, 'cough', .25); binsMode = 'full'; cue(.4, () => bub('😷', atTom())); },
     run(t, dt, st) { const k = Math.floor(t / 2.2); if (k !== st.k) { st.k = k; bub('cough!', atTom(.25), { cls: 'say', dur: 1, dx: 58 }); Sound.cough(); } } },
-  { part: 'p1', clock: '17:30', tod: 'sunset', smart: false, lost: 62, view: V([-5.6, 1.5, -8], 66, 17, 13), place: 'The town hall',
+  { id: 'p1-townhall', part: 'p1', clock: '17:30', tod: 'sunset', smart: false, lost: 62, view: V([-5.6, 1.5, -8], 66, 17, 13), place: 'The town hall',
     cap: '5:30 pm. Tom needs a document from the town hall. Closed! It’s open from 9 to 5… exactly when he is at work.',
     fr: '17 h 30. Tom a besoin d’un papier à la mairie. Fermé ! Elle est ouverte de 9 h à 17 h… pile quand il travaille.',
     setup() {
@@ -1773,18 +1773,18 @@ const B = [
         later(1.4, () => { tomDo('facepalm', 90); bub('😤', atTom()); });
       }));
     } },
-  { part: 'p1', clock: '22:30', tod: 'night', smart: false, view: V(null, -100, 15, 12), follow: tomPos, place: 'Tom’s street, at night',
+  { id: 'p1-night', part: 'p1', clock: '22:30', tod: 'night', smart: false, view: V(null, -100, 15, 12), follow: tomPos, place: 'Tom’s street, at night',
     cap: '10:30 pm. Tom walks home after dinner at a friend’s. The big avenue is lit all night… for nobody.',
     fr: '22 h 30. Tom rentre à pied après un dîner chez un ami. La grande avenue est éclairée toute la nuit… pour personne.',
     setup() { carPark(-26, 21, 180); tcar.driver = false; house.open = false; tomPlace(-12, 18.95, -90); cue(.3, () => tomWalk([[-21.4, 18.95]], 1.25)); } },
-  { part: 'p1', clock: '22:35', tod: 'night', smart: false, view: V(null, -150, 22, 9.5), follow: tomPos, place: 'Tom’s street, at night',
+  { id: 'p1-lamp', part: 'p1', clock: '22:35', tod: 'night', smart: false, view: V(null, -150, 22, 9.5), follow: tomPos, place: 'Tom’s street, at night',
     cap: 'But the lamp in his street has been broken for a month. Nobody has reported it.',
     fr: 'Mais le lampadaire de sa rue est cassé depuis un mois. Personne ne l’a signalé.',
     setup() {
       carPark(-26, 21, 180); tcar.driver = false; house.open = false; ensureTom(-21.4, 18.95, -90);
       cue(.2, () => { bub('😨', atTom(), { dur: 4 }); tomWalk([[-25.6, 18.95], [-27.6, 18.95], [HX, 19.05]], 1.05, () => { tom.scaleT = 0; houseLight(1); }, 'scared'); });
     } },
-  { part: 'p1', clock: '23:00', tod: 'night', smart: false, view: BEDV, place: 'Tom’s bedroom',
+  { id: 'p1-bed', part: 'p1', clock: '23:00', tod: 'night', smart: false, view: BEDV, place: 'Tom’s bedroom',
     cap: '11 pm. Tom goes to bed, tired and stressed. Today, he lost more than an hour.',
     fr: '23 h. Tom va se coucher, fatigué et stressé. Aujourd’hui, il a perdu plus d’une heure.',
     setup() {
@@ -1793,7 +1793,7 @@ const B = [
     } },
 
   /* ---------------- the switch */
-  { part: 'rw', clock: '23:00', tod: 'night', smart: false, view: V([-12, 0, 10], 35, 36, 72), drift: .05, place: '',
+  { id: 'rewind', part: 'rw', clock: '23:00', tod: 'night', smart: false, view: V([-12, 0, 10], 35, 36, 72), drift: .05, place: '',
     cap: 'Now, let’s rewind. Same town, same Tom, same day…',
     fr: 'Maintenant, on rembobine. Même ville, même Tom, même journée…',
     setup() { bedScene(); body.classList.add('rewinding'); $('#rew').hidden = false; Sound.rewind(); cue(.3, sleep); },
@@ -1803,17 +1803,17 @@ const B = [
       setTod(hh >= 21 ? 'night' : hh >= 17 ? 'sunset' : hh >= 14 ? 'afternoon' : hh >= 11 ? 'noon' : hh >= 8 ? 'morning' : 'dawn');
       if (t > 3.8) { body.classList.remove('rewinding'); $('#rew').hidden = true; }
     } },
-  { part: 'p2', clock: '06:45', tod: 'dawn', smart: 'wave', view: OVER, drift: .03, place: 'Our town',
+  { id: 'wave', part: 'p2', clock: '06:45', tod: 'dawn', smart: 'wave', view: OVER, drift: .03, place: 'Our town',
     cap: '…but this time, the town is smart. Look: it wakes up, street by street.',
     fr: '…mais cette fois, la ville est intelligente. Regardez : elle se réveille, rue après rue.',
     setup() { bedScene(); cue(.6, () => setSmart(true, true)); } },
 
   /* ---------------- Part 2: a smart day */
-  { part: 'p2', clock: '06:45', tod: 'dawn', smart: true, view: BEDV, place: 'Tom’s bedroom',
+  { id: 'p2-asleep', part: 'p2', clock: '06:45', tod: 'dawn', smart: true, view: BEDV, place: 'Tom’s bedroom',
     cap: '6:45. Tom is still asleep. But the house knows when he wakes up: the heating started a few minutes ago.',
     fr: '6 h 45. Tom dort encore. Mais la maison sait quand il se réveille : le chauffage s’est allumé il y a quelques minutes.',
     setup() { bedScene(); cue(.5, sleep); cue(1.5, () => bub('20 °C', THERMO, { cls: 'sign good' })); } },
-  { part: 'p2', clock: '06:45', tod: 'dawn', smart: true, view: BEDV, place: 'Tom’s bedroom',
+  { id: 'p2-alarm', part: 'p2', clock: '06:45', tod: 'dawn', smart: true, view: BEDV, place: 'Tom’s bedroom',
     cap: 'His alarm rings. It’s warm, and his phone already knows the traffic: 18 minutes to work.',
     fr: 'Son réveil sonne. Il fait bon, et son téléphone connaît déjà la circulation : 18 minutes jusqu’au travail.',
     setup() {
@@ -1821,12 +1821,12 @@ const B = [
       cue(2.5, () => { tomDo('stretch'); bub('😊', atTom(), { dur: 2.2 }); });
       cue(4.5, () => { tomDo('situp'); tom.prop = 'phone'; note('🚦', 'Traffic · now', 'Roads are clear. Leave at 7:30, 18 min to work.', atTom(.6)); Sound.ping(); });
     } },
-  { part: 'p2', clock: '07:30', tod: 'morning', smart: true, view: V(null, -95, 32, 15, [3, 0, 0]), follow: tomOrCar, place: 'Main road',
+  { id: 'p2-lights', part: 'p2', clock: '07:30', tod: 'morning', smart: true, view: V(null, -95, 32, 15, [3, 0, 0]), follow: tomOrCar, place: 'Main road',
     cap: '7:30. Same car, same road. But now the lights have sensors: they see Tom coming and turn green.',
     fr: '7 h 30. Même voiture, même route. Mais maintenant les feux ont des capteurs : ils voient Tom arriver et passent au vert.',
     setup() { leaveHome(); tcar.green = true; tcar.stopAt = 18.4; tcar.onStop = turnIn; },
     run(t, dt, st) { if (!st.cool && tcar.mode === 'sim' && tcar.x > -14) { st.cool = 1; bub('😎', atCar, { dur: 3 }); } } },
-  { part: 'p2', clock: '07:40', tod: 'morning', smart: true, lost: 12, view: V([0, .5, 16], 38, 30, 21), place: 'Smart crossroads',
+  { id: 'p2-pittsburgh', part: 'p2', clock: '07:40', tod: 'morning', smart: true, lost: 12, view: V([0, .5, 16], 38, 30, 21), place: 'Smart crossroads',
     cap: 'In Pittsburgh, in the USA, lights like these cut the waiting at red lights by 40%. For Tom, it’s 12 minutes instead of 20.',
     fr: 'À Pittsburgh, aux États-Unis, ce genre de feux a réduit de 40 % l’attente aux feux rouges. Pour Tom, ça fait 12 minutes au lieu de 20.',
     src: 'Surtrac, Carnegie Mellon University: figures reported by the team for the first pilot.',
@@ -1834,7 +1834,7 @@ const B = [
       tomHide(); tcar.driver = true; tcar.green = true;
       if (tcar.mode === 'sim') { tcar.stopAt = 18.4; tcar.onStop = turnIn; } else if (tcar.mode === 'park' && !atEntrance()) carPark(19.6, 14.2, 180);
     } },
-  { part: 'p2', clock: '08:00', tod: 'morning', smart: true, view: V(null, 22, 42, 16), follow: tomOrCar, place: 'The office car park',
+  { id: 'p2-parking', part: 'p2', clock: '08:00', tod: 'morning', smart: true, view: V(null, 22, 42, 16), follow: tomOrCar, place: 'The office car park',
     cap: '8:00. Every parking space has a sensor. The app shows Tom a free space, and he drives straight to it. He’s on time!',
     fr: '8 h. Chaque place de parking a un capteur. L’appli montre une place libre à Tom, et il y va directement. Il est à l’heure !',
     setup() {
@@ -1845,7 +1845,7 @@ const B = [
         later(.3, () => { bub('🎵', atTom(), { dur: 2.5 }); tomWalk([[23.3, 10.4], [21.5, 9], [21, 8.1]], 1.3, () => { tom.scaleT = 0; }); });
       }, { fromHere: true }));
     } },
-  { part: 'p2', clock: '12:30', tod: 'noon', smart: true, view: LUNCH, place: 'Lunch break',
+  { id: 'p2-lunch', part: 'p2', clock: '12:30', tod: 'noon', smart: true, view: LUNCH, place: 'Lunch break',
     cap: '12:30. The bins tell the truck when they are full, so it came this morning. And with fewer cars waiting, the air is cleaner.',
     fr: '12 h 30. Les poubelles préviennent le camion quand elles sont pleines : il est passé ce matin. Et avec moins de voitures à l’arrêt, l’air est plus propre.',
     setup() {
@@ -1853,7 +1853,7 @@ const B = [
       cue(1.2, () => { note('🌿', 'Air quality', 'Good today. Enjoy your lunch outside!', atTom(.9), { dx: 60 }); Sound.ping(); });
       cue(4.4, () => bub('😋', atTom(), { dur: 2.5, dx: -70 }));
     } },
-  { part: 'p2', clock: '17:30', tod: 'sunset', smart: true, lost: 14, view: V([-2.4, 1.5, -10.2], 80, 12, 9.5), place: 'The town hall',
+  { id: 'p2-townhall', part: 'p2', clock: '17:30', tod: 'sunset', smart: true, lost: 14, view: V([-2.4, 1.5, -10.2], 80, 12, 9.5), place: 'The town hall',
     cap: '5:30 pm. His document? He asked for it online, in two minutes. And on this screen, everyone can see the town’s data, live.',
     fr: '17 h 30. Son papier ? Il l’a demandé en ligne, en deux minutes. Et sur cet écran, tout le monde peut voir les données de la ville, en direct.',
     setup() {
@@ -1862,11 +1862,11 @@ const B = [
       cue(1.6, () => { tom.prop = 'phone'; note('🏛️', 'Town hall', 'Your certificate is ready ✓ Asked online in 2 min.', atTom(.6)); Sound.ping(); });
       cue(5.4, () => { tom.prop = null; tomDo('thumb'); });
     } },
-  { part: 'p2', clock: '22:30', tod: 'night', smart: true, view: V(null, -100, 15, 12), follow: tomPos, place: 'Tom’s street, at night',
+  { id: 'p2-night', part: 'p2', clock: '22:30', tod: 'night', smart: true, view: V(null, -100, 15, 12), follow: tomPos, place: 'Tom’s street, at night',
     cap: '10:30 pm. In empty streets, the lights are dimmed… and they light up when Tom walks by.',
     fr: '22 h 30. Dans les rues vides, les lampadaires sont baissés… et ils s’allument quand Tom passe.',
     setup() { carPark(-26, 21, 180); tcar.driver = false; house.open = false; tomPlace(-12, 18.95, -90); cue(.3, () => tomWalk([[-19.8, 18.95]], 1.25)); } },
-  { part: 'p2', clock: '22:35', tod: 'night', smart: true, view: V([-20.8, 1.7, 18.7], -165, 9, 7.2), place: 'Under the smart lamp',
+  { id: 'p2-sensor', part: 'p2', clock: '22:35', tod: 'night', smart: true, view: V([-20.8, 1.7, 18.7], -165, 9, 7.2), place: 'Under the smart lamp',
     cap: 'But is the town watching him? No. This lamp has a sensor: it counts people, it doesn’t film them.',
     fr: 'Mais est-ce que la ville le surveille ? Non. Ce lampadaire a un capteur : il compte les gens, il ne les filme pas.',
     setup() {
@@ -1874,7 +1874,7 @@ const B = [
       cue(.2, () => tomWalk([[-20.6, 18.95]], 1.1, () => { tomDo('lookup', -140); bub('❓', atTom(), { dur: 2 }); }));
       cue(1.6, () => bub(JSON_HTML, SENSOR_AT, { cls: 'json' })); cue(4.8, () => tomDo('thumb'));
     } },
-  { part: 'p2', clock: '22:36', tod: 'night', smart: true, view: V([-20.8, 1.9, 18.7], -160, 12, 8.4), place: 'Under the smart lamp',
+  { id: 'p2-gdpr', part: 'p2', clock: '22:36', tod: 'night', smart: true, view: V([-20.8, 1.9, 18.7], -160, 12, 8.4), place: 'Under the smart lamp',
     cap: 'And the data is protected: encrypted, kept in Europe, deleted after 30 days. That’s the law in Europe: the GDPR.',
     fr: 'Et les données sont protégées : chiffrées, gardées en Europe, effacées au bout de 30 jours. C’est la loi en Europe : le RGPD.',
     setup() {
@@ -1883,7 +1883,7 @@ const B = [
       cue(1.2, () => bub('🇪🇺 Kept in Europe', SENSOR_AT, { cls: 'sign good', dy: -44 }));
       cue(2, () => bub('🗓️ Deleted after 30 days', SENSOR_AT, { cls: 'sign good' }));
     } },
-  { part: 'p2', clock: '22:38', tod: 'night', smart: true, view: V(null, -150, 20, 10), follow: tomPos, place: 'Tom’s street, at night',
+  { id: 'p2-lamp', part: 'p2', clock: '22:38', tod: 'night', smart: true, view: V(null, -150, 20, 10), follow: tomPos, place: 'Tom’s street, at night',
     cap: 'And the broken lamp? It reported itself, and it was repaired the next day. In Dijon, the goal is to use 65% less energy for street lights.',
     fr: 'Et le lampadaire cassé ? Il a signalé sa panne tout seul, et il a été réparé le lendemain. À Dijon, l’objectif est de consommer 65 % d’énergie en moins pour l’éclairage.',
     src: 'Dijon Métropole, OnDijon contract (2017). The 65% is a target, not a measured result.',
@@ -1892,7 +1892,7 @@ const B = [
       cue(.3, () => tomWalk([[-25.6, 18.95], [-27.6, 18.95], [HX, 19.05]], 1.2, () => { tom.scaleT = 0; houseLight(1); }));
       cue(1.8, () => bub('🔧 Reported itself · repaired', BROKEN_AT, { cls: 'sign good' }));
     } },
-  { part: 'p2', clock: '23:00', tod: 'night', smart: true, view: BEDV, place: 'Tom’s bedroom',
+  { id: 'p2-bed', part: 'p2', clock: '23:00', tod: 'night', smart: true, view: BEDV, place: 'Tom’s bedroom',
     cap: '11 pm. Tom goes to bed, relaxed. Today, he lost only 14 minutes.',
     fr: '23 h. Tom va se coucher, détendu. Aujourd’hui, il n’a perdu que 14 minutes.',
     setup() {
@@ -1901,15 +1901,15 @@ const B = [
     } },
 
   /* ---------------- Part 3: where the energy comes from, where the waste goes */
-  { part: 'p3', clock: '10:00', tod: 'morning', smart: true, city: true, view: V([33, 3, -30], 118, 22, 36), place: 'The edge of town',
+  { id: 'p3-line', part: 'p3', clock: '10:00', tod: 'morning', smart: true, city: true, view: V([33, 3, -30], 118, 22, 36), place: 'The edge of town',
     cap: 'One last thing. Our town needs energy, and it makes waste. Where does it all come from, and where does it go? Let’s follow this power line.',
     fr: 'Une dernière chose. Notre ville a besoin d’énergie, et elle produit des déchets. D’où vient l’une, où vont les autres ? Suivons cette ligne électrique.',
     setup() { carPark(-26, 21, 180); tomHide(); } },
-  { part: 'p3', clock: '10:00', tod: 'morning', smart: true, view: V(E3(0, 0, 2), 30, 40, 92), camK: .9, drift: .03, place: 'The energy park',
+  { id: 'p3-park', part: 'p3', clock: '10:00', tod: 'morning', smart: true, view: V(E3(0, 0, 2), 30, 40, 92), camK: .9, drift: .03, place: 'The energy park',
     cap: 'Just outside town: a wind farm, a solar park, and the recycling centre. Everything is connected, and everything has sensors.',
     fr: 'Juste à côté de la ville : un parc éolien, un parc solaire et la déchèterie. Tout est relié, et tout a des capteurs.',
     setup() { carPark(-26, 21, 180); tomHide(); } },
-  { part: 'p3', clock: '10:05', tod: 'morning', smart: true, view: V(E3(0, 9.5, -21), 22, 12, 48), place: 'The wind farm',
+  { id: 'p3-wind', part: 'p3', clock: '10:05', tod: 'morning', smart: true, view: V(E3(0, 9.5, -21), 22, 12, 48), place: 'The wind farm',
     cap: 'This is the wind farm. On every turbine, sensors measure the wind every second: how strong it is, and where it comes from.',
     fr: 'Voici le parc éolien. Sur chaque éolienne, des capteurs mesurent le vent à chaque seconde : sa force, et d’où il vient.',
     setup() {
@@ -1917,7 +1917,7 @@ const B = [
       cue(.5, () => TURBINES.forEach((t, i) => later(i * .2, () => { t.pulse = 1; })));
       cue(1.6, () => bub(WIND_JSON, TURBINES[2].at, { cls: 'json' }));
     } },
-  { part: 'p3', clock: '10:10', tod: 'morning', smart: true, view: V(E3(0, 9.5, -21), 36, 13, 47), place: 'The wind farm',
+  { id: 'p3-windturn', part: 'p3', clock: '10:10', tod: 'morning', smart: true, view: V(E3(0, 9.5, -21), 36, 13, 47), place: 'The wind farm',
     cap: 'The wind turns? The turbines turn with it, by themselves, to face it and catch as much wind as possible.',
     fr: 'Le vent tourne ? Les éoliennes tournent avec lui, toutes seules, pour lui faire face et capter le plus de vent possible.',
     setup() {
@@ -1925,7 +1925,7 @@ const B = [
       cue(1.2, () => { EN.windA = Math.PI; EN.windT = 1; TURBINES.forEach((t, i) => { t.wait = .3 + i * .45; }); bub('💨 The wind turns', ev(-16, 15, -16), { cls: 'sign', dur: 3 }); Sound.whoosh(false); });
       cue(5.6, () => bub('✓ Facing the wind', TURBINES[2].at, { cls: 'sign good', dur: 4 }));
     } },
-  { part: 'p3', clock: '10:30', tod: 'morning', smart: true, view: V(E3(2, 7, -13), 40, 18, 34), place: 'Turbine 3',
+  { id: 'p3-maint', part: 'p3', clock: '10:30', tod: 'morning', smart: true, view: V(E3(2, 7, -13), 40, 18, 34), place: 'Turbine 3',
     cap: 'And when a part starts to wear out, the sensors warn the technicians before it breaks. No surprise breakdown, no wind wasted.',
     fr: 'Et quand une pièce commence à s’user, les capteurs préviennent les techniciens avant la panne. Pas de panne surprise, pas de vent perdu.',
     setup() {
@@ -1934,7 +1934,7 @@ const B = [
       cue(1.3, () => { note('🔧', 'Turbine 3', 'A bearing is starting to wear. Repair planned on Tuesday, before it breaks.', TURBINES[2].at); Sound.ping(); });
       cue(3, () => fGo(vanF, toWorld([[6, -1.6], [6, -12.4], [4.8, -13.5], [1.8, -13.6], [1.1, -16]]), 3.4, () => bub('👷', () => _cp.set(vanF.x, 1.9, vanF.z), { dur: 3 })));
     } },
-  { part: 'p3', clock: '11:00', tod: 'morning', smart: true, view: V(null, 32, 26, 15), follow: carPos, place: 'The recycling centre',
+  { id: 'p3-gate', part: 'p3', clock: '11:00', tod: 'morning', smart: true, view: V(null, 32, 26, 15), follow: carPos, place: 'The recycling centre',
     cap: '11:00. Tom brings his old boxes to the recycling centre, right next door. His resident card opens the gate: no queue, no paperwork.',
     fr: '11 h. Tom apporte ses vieux cartons à la déchèterie, juste à côté. Sa carte d’habitant ouvre la barrière : pas de file, pas de papiers.',
     setup() {
@@ -1944,7 +1944,7 @@ const B = [
         later(1.9, () => carGo(toWorld([[3, 8.6], [3, 11.2], [3.9, 12.7], [6.5, 12.7], [9.6, 12.7], [14.2, 12.7]]), 3.6, () => bub('📦', atCar, { dur: 2.2 }), { fromHere: true }));
       }, { fromHere: true }));
     } },
-  { part: 'p3', clock: '11:05', tod: 'morning', smart: true, view: V(E3(15, 1.5, 16), 14, 24, 11.5), place: 'The recycling centre',
+  { id: 'p3-skip', part: 'p3', clock: '11:05', tod: 'morning', smart: true, view: V(E3(15, 1.5, 16), 14, 24, 11.5), place: 'The recycling centre',
     cap: 'Every skip has a sensor that measures how full it is. Tom’s box goes into the cardboard skip… and now it’s full.',
     fr: 'Chaque benne a un capteur qui mesure son remplissage. Le carton de Tom va dans la benne à cartons… et maintenant, elle est pleine.',
     setup() {
@@ -1957,7 +1957,7 @@ const B = [
       }); });
       cue(3.9, () => tomDo('thumb'));
     } },
-  { part: 'p3', clock: '11:20', tod: 'morning', smart: true, view: V(E3(18, 1, 19), 26, 30, 21), place: 'The recycling centre',
+  { id: 'p3-truck', part: 'p3', clock: '11:20', tod: 'morning', smart: true, view: V(E3(18, 1, 19), 26, 30, 21), place: 'The recycling centre',
     cap: 'The skip calls the truck by itself. The truck only comes when a skip is full: fewer trips, less fuel, less pollution.',
     fr: 'La benne appelle le camion toute seule. Le camion ne vient que quand une benne est pleine : moins de trajets, moins de carburant, moins de pollution.',
     setup() {
@@ -1966,7 +1966,7 @@ const B = [
       cue(.5, truckRun);
       cue(8.5, () => tomDo('thumb'));
     } },
-  { part: 'p3', clock: '11:30', tod: 'morning', smart: true, view: V(E3(21, 1.5, -4.5), 26, 22, 20), place: 'The methanizer',
+  { id: 'p3-biogas', part: 'p3', clock: '11:30', tod: 'morning', smart: true, view: V(E3(21, 1.5, -4.5), 26, 22, 20), place: 'The methanizer',
     cap: 'And the green waste? It goes into these domes. It makes gas, the gas makes electricity, and what is left becomes compost for the parks.',
     fr: 'Et les déchets verts ? Ils vont dans ces dômes. Ça produit du gaz, le gaz produit de l’électricité, et le reste devient du compost pour les parcs.',
     setup() {
@@ -1976,7 +1976,7 @@ const B = [
       cue(4.4, () => bub('⚡ Electricity', GEN_AT, { cls: 'sign good' }));
       cue(6.2, () => bub('🌱 Compost for the parks', ev(14.6, 1.6, -8.4), { cls: 'sign good' }));
     } },
-  { part: 'p3', clock: '08:00', tod: 'morning', smart: true, view: V(E3(-15, 1, 18), -30, 32, 30), place: 'The solar park',
+  { id: 'p3-solar', part: 'p3', clock: '08:00', tod: 'morning', smart: true, view: V(E3(-15, 1, 18), -30, 32, 30), place: 'The solar park',
     cap: 'Now, let’s speed up the day. In the solar park, the panels follow the sun from morning to evening, to catch as much light as possible.',
     fr: 'Maintenant, on accélère la journée. Dans le parc solaire, les panneaux suivent le soleil du matin au soir, pour capter le plus de lumière possible.',
     setup() { windNow(Math.PI); atQuay(); tomHide(); cue(3, () => bub('☀️ Following the sun', ev(-15, 3.4, 18), { cls: 'sign good', dur: 5 })); },
@@ -1985,7 +1985,7 @@ const B = [
       if (m !== st.m) { st.m = m; const c = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; setClock(c); capMeta.textContent = `${c} · The solar park`; }
       setTod(k < .22 ? 'morning' : k < .5 ? 'noon' : k < .8 ? 'afternoon' : 'sunset');
     } },
-  { part: 'p3', clock: '19:00', tod: 'sunset', smart: true, view: V(E3(-6.5, 1.8, -4.4), 24, 20, 19), place: 'The smart grid',
+  { id: 'p3-grid', part: 'p3', clock: '19:00', tod: 'sunset', smart: true, view: V(E3(-6.5, 1.8, -4.4), 24, 20, 19), place: 'The smart grid',
     cap: 'All this energy arrives here. The smart grid decides, every second: send it to the town now, or store it in the batteries for tonight.',
     fr: 'Toute cette énergie arrive ici. Le réseau intelligent décide, à chaque seconde : l’envoyer à la ville maintenant, ou la stocker dans les batteries pour ce soir.',
     setup() {
@@ -1993,21 +1993,21 @@ const B = [
       cue(1.2, () => bub('⚡ To the town', ev(-20, 8.2, -4.4), { cls: 'sign good', dur: 4.5 }));
       cue(2.6, () => bub('🔋 Storing for tonight', ev(-9, 2.4, -2.2), { cls: 'sign good' }));
     } },
-  { part: 'p3', clock: '22:00', tod: 'night', smart: true, view: V(E3(-10, 2.5, -4), 58, 20, 27), place: 'The smart grid, at night',
+  { id: 'p3-night', part: 'p3', clock: '22:00', tod: 'night', smart: true, view: V(E3(-10, 2.5, -4), 58, 20, 27), place: 'The smart grid, at night',
     cap: 'At night, there is no sun. So the batteries give their energy back to the town. Nothing is wasted.',
     fr: 'La nuit, il n’y a plus de soleil. Alors les batteries rendent leur énergie à la ville. Rien n’est gaspillé.',
     setup() { windNow(Math.PI); atQuay(); tomHide(); EN.town = .95; EN.bat = .95; cue(1.4, () => bub('🔋 → 🏙️ Power for the town', ev(-9, 2.4, -2.2), { cls: 'sign good' })); } },
-  { part: 'p3', clock: '22:00', tod: 'night', smart: true, view: V(E3(-4, 0, 0), -38, 38, 90), drift: .03, place: 'The energy park',
+  { id: 'p3-recap', part: 'p3', clock: '22:00', tod: 'night', smart: true, view: V(E3(-4, 0, 0), -38, 38, 90), drift: .03, place: 'The energy park',
     cap: 'Wind, sun, and even our waste: the town makes its own clean energy, and uses it smartly. That’s a smart city too.',
     fr: 'Le vent, le soleil, et même nos déchets : la ville produit sa propre énergie propre, et l’utilise intelligemment. Ça aussi, c’est une smart city.',
     setup() { windNow(Math.PI); atQuay(); tomHide(); EN.town = .95; EN.bat = .7; } },
 
   /* ---------------- conclusion */
-  { part: 'end', clock: '23:00', tod: 'night', smart: true, over: 'board', view: OVER, drift: .03, place: 'Tom’s day',
+  { id: 'board', part: 'end', clock: '23:00', tod: 'night', smart: true, over: 'board', view: OVER, drift: .03, place: 'Tom’s day',
     cap: 'So, how do we convince people? We don’t talk to them about sensors or data. We show them their own day.',
     fr: 'Alors, comment convaincre les gens ? On ne leur parle pas de capteurs ni de données. On leur montre leur propre journée.',
     setup() { bedScene(); } },
-  { part: 'end', clock: '23:00', tod: 'sunset', smart: true, over: 'final', view: V([0, -2, 0], -32, 30, 96), drift: .025, place: '',
+  { id: 'final', part: 'end', clock: '23:00', tod: 'sunset', smart: true, over: 'final', view: V([0, -2, 0], -32, 30, 96), drift: .025, place: '',
     cap: 'Thank you for listening. Do you have any questions?',
     fr: 'Merci de nous avoir écoutés. Avez-vous des questions ?',
     setup() { bedScene(); } },
@@ -2066,6 +2066,9 @@ function go(i) {
   b.setup(st);
   setView(b.view);
   syncHUD(b);
+  // tell the live layer (phones in the room) which moment is on the board
+  try { dispatchEvent(new CustomEvent('city:beat', { detail: window.__cityBeat = { i, n: B.length, id: b.id, part: b.part, partName: PARTS[b.part], clock: b.clock, place: b.place, cap: b.cap, fr: b.fr, src: b.src || '',
+    lost: b.part === 'p1' || b.part === 'p2' ? b.lostV : null, ids: B.map(x => x.id) } })); } catch (e) {}
   try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
 }
 const next = () => go(beatI + 1), prev = () => go(beatI - 1);

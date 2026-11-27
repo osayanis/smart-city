@@ -20,6 +20,7 @@
   <div class="right">
     <div class="day" id="day"><span class="clk" id="clk">06:45</span><span class="lost"><small>Time lost today</small><b id="lost">0 min</b></span></div>
     <nav class="actions" aria-label="Controls">
+      <button class="btn live" id="b-live" hidden aria-pressed="false" title="Audience phones: show the QR code (Q)">📱<span id="live-n">0</span></button>
       <button class="btn" id="b-auto" aria-pressed="false" title="Autoplay (P)">▶<span class="lblt">Auto</span></button>
       <button class="btn" id="b-fr" aria-pressed="false" title="French subtitles (T)">FR</button>
       <button class="btn" id="b-sound" aria-pressed="false" title="Sound (M)">♪</button>
@@ -34,6 +35,12 @@
   <p class="q">How do we convince people that a smart city is good for their way of life?</p>
   <p class="by"><span class="sig">Yanis</span><span>IT technician at the town hall · BTS CIEL</span></p>
   <button class="cta" id="start">Follow Tom <span aria-hidden="true">→</span></button>
+  <aside class="join" id="join" hidden>
+    <div class="qr" data-qr></div>
+    <p class="jt">Follow on your phone</p>
+    <p class="ju">Scan, keep the page open, and react live. No name, no account.</p>
+    <p class="jn"><b data-count>0</b> phones connected</p>
+  </aside>
 </section>
 
 <section class="board" id="board" hidden aria-label="Tom's day in both towns">
@@ -71,6 +78,20 @@
   <p class="by"><span class="sig">Yanis</span></p>
 </section>
 
+<div class="qrbig" id="qrbig" hidden role="dialog" aria-label="Join on your phone">
+  <div class="qrcard">
+    <div class="qr" data-qr></div>
+    <div class="qtx">
+      <p class="eyebrow">On your phone</p>
+      <p class="qh">Scan to follow along</p>
+      <p class="qu" data-url></p>
+      <p class="qn"><b data-count>0</b> phones connected</p>
+    </div>
+  </div>
+</div>
+<div id="reacts" aria-hidden="true"></div>
+<section class="pollb" id="pollb" hidden aria-live="polite"></section>
+
 <div class="rew" id="rew" hidden aria-hidden="true"><span>◀◀</span></div>
 
 <footer class="subs" id="subs" aria-live="polite">
@@ -89,5 +110,8 @@
 
 <script src="vendor/three.min.js"></script>
 <script src="js/city.js"></script>
+<script src="js/qr.js"></script>
+<script src="js/polls.js"></script>
+<script src="js/live.js"></script>
 </body>
 </html>
