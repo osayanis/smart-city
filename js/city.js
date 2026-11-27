@@ -38,6 +38,7 @@ const store = {
 /* ------------------------------------------------------------------ the wave: ordinary (grey) -> smart (alive) */
 const WAVE = { uR: { value: 0 }, uC: { value: new T.Vector2(-8, -8) }, uW: { value: 7 }, uEdge: { value: new T.Color(1, .3, .6) }, uEdgeOn: { value: 0 } };
 let waveR = 0;
+const WMAX = 200;   // far enough to wake the energy park too
 const wake = (x, z) => sstep(0, WAVE.uW.value, waveR - Math.hypot(x - WAVE.uC.value.x, z - WAVE.uC.value.y));
 function waveCompile(sh) {
   Object.assign(sh.uniforms, WAVE);
@@ -753,8 +754,9 @@ const TOM = (() => {
   const phone = new T.Mesh(new T.BoxGeometry(.075, .13, .016), noWave(new T.MeshStandardMaterial({ color: 0x111111, emissive: 0x9ad0ff, emissiveIntensity: .9 })));
   phone.position.set(0, -.2, .05); phone.rotation.x = -.5; arms[1].el.add(phone); phone.visible = false;
   const food = new T.Mesh(new T.BoxGeometry(.14, .07, .09), mat('#e6c58a')); food.position.set(0, -.21, .04); arms[1].el.add(food); food.visible = false;
+  const box = new T.Mesh(new T.BoxGeometry(.3, .22, .24), mat('#c49a62')); box.position.set(0, .2, .3); box.castShadow = true; upper.add(box); box.visible = false;
   scene.add(root);
-  return { root, hips, upper, head, legs, arms, phone, food, skin, hair };
+  return { root, hips, upper, head, legs, arms, phone, food, box, skin, hair };
 })();
 
 /* Tom's car, with Tom's head behind the windscreen */
@@ -767,6 +769,383 @@ const tomCarG = makeCar('#e2574c', true);
 }
 scene.add(tomCarG);
 const tomFill = new T.PointLight(0xc9d6ff, 0, 7, 2); scene.add(tomFill);
+/* ================================================================== Part 3: the energy park, a second map outside the town */
+const EX = 150, EZ = 0;                                     // centre of the island
+const ev = (lx, y, lz) => new T.Vector3(EX + lx, y, EZ + lz);
+const E3 = (lx, y, lz) => [EX + lx, y, EZ + lz];
+const glowSprite = (hex, s = .6) => { const sp = new T.Sprite(new T.SpriteMaterial({ map: glowTex, color: lin(hex), transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false, opacity: 0 })); sp.scale.setScalar(s); scene.add(sp); return sp; };
+const EN = { wind: .8, windT: .8, bio: .5, town: .6, bat: .45, windA: Math.PI / 2, sunK: 0, net: 0, gate: 0, gateT: 0, maint: false };
+const islandH = (lx, lz) => {
+  if (lx > 9 && lx < 27 && lz > 10 && lz < 15.5) return 1.1;                     // the recycling quay
+  if (lx > 4 && lx <= 9 && lz > 11.2 && lz < 14.2) return 1.1 * (lx - 4) / 5;   // its ramp
+  return .04;
+};
+const gravel = std('#cdbf9f'), concrete = std('#cfc8bb'), steel = std('#9aa2a8');
+{
+  // the tile
+  const top = new T.Mesh(new T.BoxGeometry(64, 4, 64), [M.edge, M.edge, M.grass, M.edge, M.edge, M.edge]);
+  top.position.set(EX, -2, EZ); top.receiveShadow = true; scene.add(top);
+  mbox(67, .8, 67, M.base, EX, -4.8, EZ, scene, false);
+  // roads: main road, the way in to the recycling centre, the trucks' loop
+  mbox(64, .04, 3.4, M.road, EX, 0, EZ + 3, scene, false);
+  for (let x = -30.6; x < 32; x += 2.4) mbox(1.1, .02, .14, M.mark, EX + x, .04, EZ + 3, scene, false);
+  mbox(3, .04, 9.6, M.road, EX + 3, .001, EZ + 9.3, scene, false);
+  mbox(3, .04, 19, M.road, EX + 29.5, .001, EZ + 12.6, scene, false);
+  mbox(3, .04, 19, M.road, EX, .001, EZ + 12.6, scene, false);
+  mbox(32.5, .04, 3, M.road, EX + 15, .002, EZ + 21.5, scene, false);
+  // gravel tracks to the wind turbines
+  mbox(52, .03, 2.2, gravel, EX, 0, EZ - 13.5, scene, false);
+  mbox(2.2, .03, 13.6, gravel, EX + 6, .004, EZ - 6.4, scene, false);
+  for (let x = -31; x <= 31; x += 3.1) { tree(EX + x, EZ - 31, rr(.8, 1.1), 0); if (Math.abs(x) > 4) tree(EX + x, EZ + 31, rr(.8, 1.1), 0); }
+  for (let z = -27.9; z <= 28; z += 3.1) { if (Math.abs(z - 3) > 3) { tree(EX - 31, EZ + z, rr(.8, 1.1), 0); tree(EX + 31.3, EZ + z, rr(.8, 1.1), 0); } }
+}
+
+/* wind turbines with sensors: they turn to face the wind */
+const TURBINES = [[-24, -20], [-12, -25], [0, -19], [12, -25], [24, -20]].map(([lx, lz], i) => {
+  const x = EX + lx, z = EZ + lz;
+  mbox(3, .03, 3, gravel, x, .008, z, scene, false);
+  mbox(2.2, .03, Math.abs(lz + 13.5) - 1.4, gravel, x, .004, EZ + (lz - 13.5) / 2 + (lz < -13.5 ? .7 : -.7), scene, false);
+  mcyl(.2, .42, 13, 14, M.white, x, 0, z);
+  const nac = new T.Group(); nac.position.set(x, 13.1, z); scene.add(nac);
+  const nb = new T.Mesh(new T.BoxGeometry(.75, .75, 2), M.white); nb.position.z = -.25; nb.castShadow = true; nac.add(nb);
+  const hub = new T.Mesh(new T.SphereGeometry(.34, 12, 8), M.white); hub.position.z = .9; hub.scale.z = 1.4; nac.add(hub);
+  const rotor = new T.Group(); rotor.position.z = .95; nac.add(rotor);
+  for (let k = 0; k < 3; k++) {
+    const g = new T.BoxGeometry(.38, 5.6, .09); g.translate(0, 2.8, 0);
+    const b = new T.Mesh(g, M.white); b.rotation.z = k * Math.PI * 2 / 3; b.castShadow = true; rotor.add(b);
+  }
+  rotor.rotation.z = i;
+  // the sensors: a little anemometer and a light on top of the nacelle
+  const mast = new T.Mesh(new T.CylinderGeometry(.025, .025, .5, 5), M.dark); mast.position.set(0, .6, -1); nac.add(mast);
+  const cups = new T.Group(); cups.position.set(0, .86, -1); nac.add(cups);
+  for (let k = 0; k < 3; k++) { const c = new T.Mesh(new T.SphereGeometry(.07, 6, 4), M.dark); c.position.set(Math.cos(k * 2.1) * .2, 0, Math.sin(k * 2.1) * .2); cups.add(c); }
+  const led = glowSprite('#ffffff', .9); led.position.set(x, 13.75, z);
+  const ring = new T.Sprite(new T.SpriteMaterial({ map: ringTex, color: lin('#8fd3ff'), transparent: true, depthWrite: false, opacity: 0, toneMapped: false })); ring.position.copy(led.position); scene.add(ring);
+  const yaw = EN.windA + Math.PI; nac.rotation.y = yaw;
+  return { x, z, lx, lz, nac, rotor, cups, led, ring, yaw, wait: 0, pulse: 0, at: new T.Vector3(x, 14.2, z) };
+});
+
+/* the wind you can see: streaks blowing over the farm */
+const STREAKS = Array.from({ length: 34 }, () => {
+  const m = new T.Mesh(new T.BoxGeometry(.05, .05, 3.2), noWave(new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })));
+  m.userData = { t: rnd() * 2, L: rr(1.6, 2.6), sp: rr(7, 10) }; scene.add(m); return m;
+});
+function spawnStreak(s) {
+  const a = EN.windA, ux = Math.sin(a), uz = Math.cos(a);
+  s.position.set(EX + rr(-30, 30) - ux * 8, rr(3, 15), EZ + rr(-30, -6) - uz * 8);
+  s.rotation.y = a; s.userData.t = 0; s.userData.L = rr(1.6, 2.6);
+}
+
+/* a windsock next to the control room */
+const sock = new T.Group();
+{
+  mcyl(.05, .07, 4.2, 6, M.dark, EX + 6.5, 0, EZ - 9.5);
+  sock.position.set(EX + 6.5, 4, EZ - 9.5); scene.add(sock);
+  const g = new T.ConeGeometry(.32, 1.5, 14, 1, true); g.rotateX(Math.PI / 2); g.translate(0, 0, .75);
+  const m = new T.Mesh(g, std('#ef7d3c')); m.material.side = T.DoubleSide; m.castShadow = true; sock.add(m);
+}
+
+/* the solar park: rows of panels on trackers that follow the sun */
+const ROWS = [];
+for (let i = 0; i < 8; i++) {
+  const lx = -28 + i * 3.25, x = EX + lx;
+  for (const z of [9.2, 18, 26.8]) mcyl(.06, .08, 1.2, 6, M.dark, x, 0, EZ + z);
+  const row = new T.Group(); row.position.set(x, 1.25, EZ + 18); scene.add(row);
+  for (let k = 0; k < 5; k++) {
+    const p = new T.Mesh(new T.BoxGeometry(2, .07, 3.6), M.panel); p.position.z = -7.6 + k * 3.8; p.castShadow = true; p.receiveShadow = true; row.add(p);
+    const f = new T.Mesh(new T.BoxGeometry(2.04, .05, .06), M.white); f.position.set(0, .03, -7.6 + k * 3.8 + 1.8); row.add(f);
+  }
+  const axle = new T.Mesh(new T.CylinderGeometry(.05, .05, 19.4, 6), M.dark); axle.rotation.x = Math.PI / 2; axle.position.y = -.06; row.add(axle);
+  ROWS.push({ row, a: 0 });
+}
+mbox(1.2, 1, .8, M.white, EX - 16, 0, EZ + 6.6);   // the inverter
+
+/* the smart grid: substation, batteries, control room and its screen */
+const BATS = [], SEGS = [];
+{
+  // substation, fenced
+  for (const [w, d, x, z] of [[6.2, .06, 0, -8.6], [6.2, .06, 0, -2.4], [.06, 6.2, -3.1, -5.5], [.06, 6.2, 3.1, -5.5]]) mbox(w, .9, d, steel, EX + x, 0, EZ + z, scene, false);
+  mbox(6.2, .03, 6.2, gravel, EX, 0, EZ - 5.5, scene, false);
+  for (const x of [-1.4, 1.4]) {
+    mbox(1.6, 1.4, 1.2, std('#7c8a86'), EX + x, 0, EZ - 6.3);
+    for (const dx of [-.45, 0, .45]) mcyl(.07, .1, .55, 8, std('#c98a5a'), EX + x + dx, 1.4, EZ - 6.3);
+    mbox(1.3, 1, .25, M.dark, EX + x, .15, EZ - 5.55);
+  }
+  for (const x of [-2.6, 2.6]) mcyl(.09, .12, 4.3, 6, steel, EX + x, 0, EZ - 4.4);
+  mbox(5.4, .18, .18, steel, EX, 4.2, EZ - 4.4);
+  // batteries: three containers, their lights show how full they are
+  for (const x of [-12.5, -9, -5.5]) {
+    mbox(3, 1.5, 1.6, M.white, EX + x, 0, EZ - 2.2);
+    mbox(3.04, .12, 1.64, std('#4aa37a'), EX + x, 1.38, EZ - 2.2);
+    mbox(.5, .5, .04, M.dark, EX + x - 1, .5, EZ - 1.39);
+    for (let k = 0; k < 5; k++) {
+      const m = noWave(new T.MeshBasicMaterial({ color: 0x222222, toneMapped: false }));
+      const s = new T.Mesh(new T.BoxGeometry(.26, .5, .03), m); s.position.set(EX + x - .1 + k * .32, .75, EZ - 1.38); scene.add(s); SEGS.push({ m, k });
+    }
+    BATS.push(x);
+  }
+  // control room
+  mbox(4, 2.6, 3, M.b1, EX - 12, 0, EZ - 7.5);
+  mbox(4.3, .15, 3.3, M.roof, EX - 12, 2.6, EZ - 7.5);
+  mbox(.9, 1.6, .05, M.trunk, EX - 11, 0, EZ - 5.98);
+  mbox(1.3, .7, .05, glassM, EX - 13, 1, EZ - 5.98);
+  for (const x of [-8.1, -5.1]) mcyl(.06, .06, 1.6, 6, M.dark, EX + x, 0, EZ - 6.6);
+}
+const gridScreen = canvasPlane(512, 320, 3.4, 2.12);
+gridScreen.mesh.position.set(EX - 6.6, 2.6, EZ - 6.55); gridScreen.mesh.rotation.y = 18 * D2R;
+const FLOODS = [[-3.4, -9], [3.4, -9], [8.5, 9.4], [26, 9.4]].map(([x, z]) => { mcyl(.05, .06, 4.2, 6, M.dark, EX + x, 0, EZ + z); const s = glowSprite('#ffd9a0', 3); s.position.set(EX + x, 4.25, EZ + z); return s; });
+
+/* the power line to the town */
+function pylon(x, z, rotY = 0) {
+  const g = new T.Group(); g.position.set(x, 0, z); g.rotation.y = rotY; scene.add(g);
+  const tw = new T.Mesh(new T.CylinderGeometry(.14, .6, 7.6, 4, 1, true), new T.MeshStandardMaterial({ color: 0x6f7378, roughness: .6, wireframe: true }));
+  tw.position.y = 3.8; tw.rotation.y = Math.PI / 4; g.add(tw);
+  const core = new T.Mesh(new T.CylinderGeometry(.06, .2, 7.6, 4), M.dark); core.position.y = 3.8; core.castShadow = true; g.add(core);
+  const arm = new T.Mesh(new T.BoxGeometry(3.2, .14, .14), M.dark); arm.position.y = 7.2; arm.castShadow = true; g.add(arm);
+  for (const dx of [-1.4, 0, 1.4]) { const ins = new T.Mesh(new T.CylinderGeometry(.06, .06, .4, 6), std('#c98a5a')); ins.position.set(dx, 6.95, 0); g.add(ins); }
+  return g;
+}
+const CITY_PYLON = new T.Vector3(35, 0, -35);
+pylon(EX - 18, EZ - 4.4, Math.PI / 2); pylon(EX - 30, EZ - 4.4, Math.PI / 2); pylon(CITY_PYLON.x, CITY_PYLON.z, -Math.PI / 4);
+const LINE_PTS = (() => {
+  const P = [ev(0, 4.3, -4.4), ev(-9, 5.6, -4.4), ev(-18, 6.8, -4.4), ev(-24, 6.2, -4.4), ev(-30, 6.8, -4.4)];
+  const a = ev(-30, 6.8, -4.4), b = new T.Vector3(CITY_PYLON.x, 6.8, CITY_PYLON.z);
+  for (let k = 1; k <= 10; k++) { const s = k / 11; P.push(new T.Vector3(lerp(a.x, b.x, s), 6.8 - 16 * 4 * s * (1 - s) * .5, lerp(a.z, b.z, s))); }
+  P.push(b, new T.Vector3(CITY_PYLON.x - 2, 4.5, CITY_PYLON.z + 2), new T.Vector3(CITY_PYLON.x - 3, .4, CITY_PYLON.z + 3));
+  return P;
+})();
+{
+  const c = new T.CatmullRomCurve3(LINE_PTS.slice(0, -2), false, 'centripetal');
+  const w = new T.Mesh(new T.TubeGeometry(c, 240, .045, 5, false), M.dark); scene.add(w);
+  mbox(1.4, 1.1, 1.1, std('#7c8a86'), CITY_PYLON.x - 3, 0, CITY_PYLON.z + 3);
+}
+
+/* energy you can see: glowing packets running along the cables */
+const FLOWS = {};
+function flow(key, pts, hex, n, speed, size = .55) {
+  const v = pts.map(p => Array.isArray(p) ? ev(p[0], p[1], p[2]) : p).filter((p, i, a) => !i || p.distanceTo(a[i - 1]) > .1);
+  const curve = new T.CatmullRomCurve3(v, false, 'centripetal'), len = curve.getLength();
+  const line = new T.Line(new T.BufferGeometry().setFromPoints(curve.getPoints(Math.max(8, Math.round(len * 2)))), new T.LineBasicMaterial({ color: lin(hex), transparent: true, opacity: 0, depthWrite: false }));
+  scene.add(line);
+  const packets = Array.from({ length: n }, (_, i) => { const s = glowSprite(hex, size); return { s, u: i / n }; });
+  const F = { curve, len, line, packets, speed, k: 0, kT: 1, rev: false };
+  (FLOWS[key] = FLOWS[key] || []).push(F); return F;
+}
+for (const t of TURBINES) flow('wind', [[t.lx, .3, t.lz + .5], [t.lx, .3, -13.5], [0, .3, -13.5], [0, .3, -8.8]], '#8fd3ff', 4, 4.5);
+flow('sun', [[-16, .3, 7.2], [-16, .3, .8], [-1.5, .3, .8], [-1.5, .3, -2.6]], '#ffcf5a', 6, 4.5);
+flow('bio', [[27.4, .3, -1.3], [27.4, .3, .8], [1.5, .3, .8], [1.5, .3, -2.6]], '#8fe08a', 6, 4.5);
+flow('gas', [[19.2, 2.2, -5.5], [22, 2.6, -5.5], [24.8, 2.2, -5.5], [26.6, 1.2, -2.6]], '#8fe08a', 3, 2.5, .45);
+flow('bat', [[-3.2, .3, -4.6], [-9, .3, -4.6], [-9, .3, -3.1]], '#6ff0c8', 4, 3.5);
+flow('town', LINE_PTS, '#ff8fc8', 26, 9, .8);
+
+/* the methanizer: green waste becomes gas, then electricity, and compost */
+const DOMES = [];
+{
+  for (const lx of [19.2, 24.8]) {
+    mcyl(2.3, 2.3, 1.3, 26, concrete, EX + lx, 0, EZ - 5.5);
+    const d = new T.Mesh(new T.SphereGeometry(2.3, 26, 12, 0, Math.PI * 2, 0, Math.PI / 2), std('#7fa86a'));
+    d.position.set(EX + lx, 1.3, EZ - 5.5); d.scale.y = .8; d.castShadow = true; d.receiveShadow = true; scene.add(d); DOMES.push(d);
+  }
+  mbox(2.2, 1.5, 1.4, M.white, EX + 27.4, 0, EZ - 2.2);
+  mcyl(.12, .12, 1.6, 8, M.dark, EX + 28.1, 1.5, EZ - 2.4);
+  const pile = new T.Mesh(new T.SphereGeometry(1.9, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), std('#6b4a2e')); pile.scale.set(1.3, .55, 1); pile.position.set(EX + 14.2, 0, EZ - 5); pile.castShadow = true; scene.add(pile);
+  const pile2 = pile.clone(); pile2.material = std('#5f8a3e'); pile2.scale.set(.8, .45, .7); pile2.position.set(EX + 14.6, 0, EZ - 8.4); scene.add(pile2);
+}
+const GAS_AT = ev(22, 4.2, -5.5), GEN_AT = ev(27.4, 2.6, -2.2), COMPOST_AT = ev(14.2, 1.6, -5);
+
+/* the recycling centre: a quay, five skips with fill sensors, a gate */
+const QUAY_Y = 1.1;
+{
+  mbox(18, QUAY_Y, 5.5, concrete, EX + 18, 0, EZ + 12.75);
+  const sh = new T.Shape(); sh.moveTo(0, 0); sh.lineTo(5, 0); sh.lineTo(5, QUAY_Y); sh.lineTo(0, 0);
+  const rg = new T.ExtrudeGeometry(sh, { depth: 3, bevelEnabled: false });
+  const ramp = new T.Mesh(rg, concrete); ramp.position.set(EX + 4, 0, EZ + 11.2); ramp.castShadow = ramp.receiveShadow = true; scene.add(ramp);
+  mbox(18, .03, 3, M.road, EX + 18, QUAY_Y, EZ + 12.7, scene, false);
+  for (let x = 9.3; x <= 27; x += 1.75) mcyl(.035, .035, .62, 6, std('#f2c14e'), EX + x, QUAY_Y, EZ + 15.35);
+  mbox(17.8, .06, .06, std('#f2c14e'), EX + 18.1, QUAY_Y + .58, EZ + 15.35);
+  // gate: a barrier that opens with the resident card
+  mbox(.4, 1.1, .4, M.white, EX + 5.2, 0, EZ + 7);
+  mbox(.22, 1.2, .22, M.dark, EX + 5.6, 0, EZ + 5.4);
+  mbox(.36, .3, .08, M.dark, EX + 5.6, 1, EZ + 5.33);
+}
+const GATE = new T.Group(); GATE.position.set(EX + 5.2, 1, EZ + 7); scene.add(GATE);
+for (let k = 0; k < 4; k++) { const s = new T.Mesh(new T.BoxGeometry(.8, .1, .1), k % 2 ? M.white : std('#d2373c')); s.position.x = -.4 - k * .8; s.castShadow = true; GATE.add(s); }
+const GATE_AT = ev(5.6, 1.9, 5.4);
+const gateLed = glowSprite('#ff5a4a', .5); gateLed.position.set(EX + 5.6, 1.18, EZ + 5.28);
+const SIGN_RC = canvasPlane(512, 160, 4.2, 1.3);
+{
+  const { g, tex, mesh } = SIGN_RC;
+  g.fillStyle = '#20573f'; g.fillRect(0, 0, 512, 160); g.strokeStyle = '#f4efe6'; g.lineWidth = 6; g.strokeRect(10, 10, 492, 140);
+  g.fillStyle = '#f4efe6'; g.font = '600 54px "Bricolage Grotesque", sans-serif'; g.textBaseline = 'middle'; g.fillText('♻ Recycling centre', 34, 64);
+  g.font = '28px "JetBrains Mono", monospace'; g.fillText('open 7 days · card entry', 38, 118); tex.needsUpdate = true;
+  mesh.position.set(EX + 8.8, 2.4, EZ + 7.6);
+  for (const dx of [-1.9, 1.9]) mcyl(.05, .05, 1.8, 6, M.dark, EX + 8.8 + dx, 0, EZ + 7.55);
+}
+const SKIP_KIND = [['📦', 'Cardboard', '#3f6fb5', '#b98d5a'], ['🪵', 'Wood', '#8a5b35', '#a8784a'], ['🔩', 'Metal', '#7b838c', '#5d6268'], ['🌿', 'Green waste', '#4f8c46', '#6c9a3e'], ['📺', 'Electronics', '#d69a2d', '#3a3d44']];
+const SKIPS = SKIP_KIND.map(([icon, name, c, fillC], i) => {
+  const lx = 11.5 + i * 3.5, home = ev(lx, 0, 17.6), g = new T.Group(); g.position.copy(home); scene.add(g);
+  const m = std(c), add = (w, h, d, x, y, z) => { const o = new T.Mesh(new T.BoxGeometry(w, h, d), m); o.position.set(x, y + h / 2, z); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
+  add(2.8, .12, 3.4, 0, 0, 0); add(.12, 1.1, 3.4, -1.34, 0, 0); add(.12, 1.1, 3.4, 1.34, 0, 0); add(2.8, 1.1, .12, 0, 0, -1.64); add(2.8, 1.1, .12, 0, 0, 1.64);
+  const cg = new T.BoxGeometry(2.5, 1, 3.1); cg.translate(0, .5, 0);
+  const contents = new T.Mesh(cg, std(fillC)); contents.position.y = .12; contents.receiveShadow = true; g.add(contents);
+  const [lc, lg] = cnv(256, 112), ltex = ctex(lc);
+  const label = new T.Mesh(new T.PlaneGeometry(2.2, .96), new T.MeshBasicMaterial({ map: ltex, toneMapped: false })); label.position.set(0, .58, 1.71); g.add(label);
+  const sensor = new T.Mesh(new T.BoxGeometry(.3, .16, .2), M.white); sensor.position.set(0, 1.18, -1.64); g.add(sensor);
+  const led = glowSprite('#7bd88f', .55);
+  return { i, icon, name, g, home, contents, label, lg, ltex, led, fill: 0, shown: -1, pop: 1, at: () => _cp.copy(g.position).add(_up.set(0, 1.9, -1.4)) };
+});
+function drawSkipLabel(S) {
+  const pct = Math.round(S.fill * 100); if (pct === S.shown) return; S.shown = pct;
+  const g = S.lg, full = pct >= 100, col2 = full ? '#e5484d' : pct > 80 ? '#f2a93b' : '#3fb37f';
+  g.fillStyle = '#f7f3ea'; g.fillRect(0, 0, 256, 112);
+  g.fillStyle = '#1c1714'; g.font = '600 30px "Bricolage Grotesque", sans-serif'; g.textBaseline = 'middle'; g.fillText(`${S.icon} ${S.name}`, 14, 30);
+  g.fillStyle = '#ddd5c8'; g.fillRect(14, 62, 160, 30); g.fillStyle = col2; g.fillRect(14, 62, 160 * Math.min(1, S.fill), 30);
+  g.fillStyle = col2; g.font = '700 30px "JetBrains Mono", monospace'; g.fillText(full ? 'FULL' : pct + '%', 184, 78);
+  S.ltex.needsUpdate = true;
+}
+const SKIP_FILL0 = [.93, .55, .4, .7, .25];
+
+/* the skip lorry and the technicians' van */
+const truckG = new T.Group(), truckF = follower(truckG);
+{
+  const green = std('#3f8f6b');
+  const ch = new T.Mesh(new T.BoxGeometry(1.25, .32, 5), M.dark); ch.position.set(0, .5, -.3); ch.castShadow = true; truckG.add(ch);
+  const cab = new T.Mesh(new T.BoxGeometry(1.4, 1.25, 1.3), green); cab.position.set(0, 1.18, 1.65); cab.castShadow = true; truckG.add(cab);
+  const win = new T.Mesh(new T.BoxGeometry(1.3, .45, .05), cabMat); win.position.set(0, 1.45, 2.31); truckG.add(win);
+  const hook = new T.Mesh(new T.BoxGeometry(.25, 1.3, .25), green); hook.position.set(0, 1.2, .78); truckG.add(hook);
+  const wg = new T.CylinderGeometry(.27, .27, .2, 12).rotateZ(Math.PI / 2);
+  for (const z of [1.6, -1.2, -2.2]) for (const x of [-.62, .62]) { const w = new T.Mesh(wg, M.dark); w.position.set(x, .27, z); truckG.add(w); }
+  truckG.visible = false; scene.add(truckG);
+}
+const vanG = makeCar('#f1ede4'), vanF = follower(vanG);
+{ const s = new T.Mesh(new T.BoxGeometry(.97, .1, 1.92), std('#ef7d3c')); s.position.y = .42; vanG.add(s); scene.add(vanG); }
+const VAN_HOME = [6, -1.6];
+let carried = null, flyBox = null;
+const FLY = new T.Mesh(new T.BoxGeometry(.3, .22, .24), noWave(new T.MeshStandardMaterial({ color: lin('#c49a62'), roughness: .8 }))); FLY.visible = false; FLY.castShadow = true; scene.add(FLY);
+function throwBox(from, to, then) { FLY.visible = true; flyBox = { a: from.clone(), b: to.clone(), t: 0, then }; FLY.position.copy(from); }
+const SUN_C = new T.Vector3();
+function energyReset() {
+  EN.windA = Math.PI / 2; EN.wind = EN.windT = .8; EN.bio = .5; EN.town = .6; EN.maint = false; EN.gateT = 0;
+  for (const t of TURBINES) { t.yaw = EN.windA + Math.PI; t.wait = 0; t.pulse = 0; }
+  for (const S of SKIPS) { if (S.g.parent !== scene) scene.attach(S.g); S.g.position.copy(S.home); S.g.rotation.set(0, 0, 0); S.g.visible = true; S.fill = SKIP_FILL0[S.i]; S.pop = 1; }
+  if (carried) { carried.parent.remove(carried); carried = null; }
+  truckF.moving = false; truckG.visible = false; Object.assign(truckF, { x: EX + 40, z: EZ + 2.2 });
+  vanF.moving = false; Object.assign(vanF, { x: EX + VAN_HOME[0], z: EZ + VAN_HOME[1], yaw: Math.PI });
+  FLY.visible = false; flyBox = null;
+}
+const toWorld = pts => pts.map(([x, z]) => [EX + x, EZ + z]);
+function truckRun() {
+  truckG.visible = true; Object.assign(truckF, { x: EX + 33, z: EZ + 2.2, yaw: -Math.PI / 2 });
+  fGo(truckF, toWorld([[33, 2.2], [31, 2.4], [29.6, 4.4], [29.5, 18.6], [28, 21.3], [24, 21.5], [14.1, 21.5]]), 6.5, truckLoad);
+}
+function truckLoad() {
+  const S = SKIPS[0];
+  carried = S.g.clone(); carried.remove(carried.children.find(c => c.geometry && c.geometry.type === 'PlaneGeometry'));
+  scene.add(carried); S.g.visible = false;
+  const from = S.home.clone(), to = ev(15, .62, 21.5), t0 = beatT;
+  st.load = { from, to, t0 };
+  Sound.thud();
+}
+function stepEnergy(dt, time) {
+  // wind: speed, direction, turbines turning to face it one after the other
+  EN.wind = lerp(EN.wind, EN.windT, damp(1.5, dt));
+  const tgt = EN.windA + Math.PI;
+  TURBINES.forEach((t, i) => {
+    t.rotor.rotation.z -= dt * (.4 + EN.wind * 1.4);
+    t.cups.rotation.y += dt * (3 + EN.wind * 6);
+    const d = wrapPi(tgt - t.yaw);
+    if (t.wait > 0) t.wait -= dt;
+    else if (Math.abs(d) > .002) { t.yaw += clamp(d, -.6 * dt, .6 * dt); t.pulse = 1; }
+    t.nac.rotation.y = t.yaw;
+    t.pulse = Math.max(0, t.pulse - dt * .7);
+    const warn = EN.maint && i === 2, w = wake(t.x, t.z);
+    t.led.material.color.set(warn ? 0xff9a3c : 0x8fd3ff);
+    t.led.material.opacity = w * (warn ? (Math.sin(time * 8) > 0 ? 1 : .25) : .45 + .35 * Math.sin(time * 3 + i));
+    const rt = (time * .8 + i * .2) % 1; t.ring.scale.setScalar(.6 + rt * 3.5); t.ring.material.opacity = w * (warn ? 0 : (1 - rt) * (.25 + t.pulse * .6));
+  });
+  for (const s of STREAKS) {
+    const u = s.userData; u.t += dt;
+    if (u.t > u.L) spawnStreak(s);
+    s.position.x += Math.sin(s.rotation.y) * u.sp * dt * (.5 + EN.wind); s.position.z += Math.cos(s.rotation.y) * u.sp * dt * (.5 + EN.wind);
+    s.material.opacity = Math.sin(Math.PI * clamp(u.t / u.L, 0, 1)) * .55 * wake(s.position.x, s.position.z);
+  }
+  sock.rotation.y += wrapPi(EN.windA - sock.rotation.y) * damp(3, dt);
+  sock.rotation.x = Math.sin(time * 6) * .06;
+  // sun: the trackers turn towards it, and lie flat at night
+  _od.copy(TS.pos).normalize();
+  EN.sunK = clamp((TS.si - .6) / 1.5, 0, 1) * (TS.pos.y > 0 ? 1 : 0) * (todName === 'night' ? 0 : 1);
+  const sa = EN.sunK > .05 ? clamp(Math.atan2(-_od.x, _od.y), -.95, .95) : 0;
+  ROWS.forEach((r, i) => { r.a = lerp(r.a, sa, damp(1.2 + i * .12, dt)); r.row.rotation.z = r.a; });
+  // the grid: what comes in, what the town needs, the batteries in between
+  EN.net = EN.wind * .55 + EN.sunK * .45 + EN.bio * .12 - EN.town * .8;
+  EN.bat = clamp(EN.bat + EN.net * dt * .22, .05, .98);
+  const lit = Math.round(EN.bat * 5), charging = EN.net > .02;
+  for (const S of SEGS) S.m.color.copy(S.k < lit ? goodCol : (charging && S.k === lit && Math.sin(time * 6) > 0) ? goodCol : _a.setRGB(.06, .06, .07));
+  for (const D of DOMES) D.scale.y = .8 + Math.sin(time * 1.3) * .025 * EN.bio;
+  const want = { wind: EN.wind, sun: EN.sunK, bio: EN.bio, gas: EN.bio, bat: Math.min(1, Math.abs(EN.net) * 3), town: 1 };
+  for (const key in FLOWS) for (const F of FLOWS[key]) {
+    F.k = lerp(F.k, want[key], damp(2, dt));
+    if (key === 'bat') F.rev = !charging;
+    const v = F.speed / F.len * (.4 + .6 * F.k);
+    F.line.material.opacity = .22 * F.k * wake(F.curve.points[0].x, F.curve.points[0].z);
+    for (const p of F.packets) {
+      p.u = (p.u + dt * v) % 1; F.curve.getPointAt(F.rev ? 1 - p.u : p.u, p.s.position);
+      p.s.material.opacity = F.k * wake(p.s.position.x, p.s.position.z) * Math.min(1, Math.sin(p.u * Math.PI) * 4);
+    }
+  }
+  for (const f of FLOODS) f.material.opacity = clamp(G - .5, 0, 1) * .55;
+  // the recycling centre
+  EN.gate = lerp(EN.gate, EN.gateT, damp(4, dt)); GATE.rotation.z = -1.45 * EN.gate;
+  gateLed.material.color.set(EN.gateT ? 0x63e07a : 0xff5a4a); gateLed.material.opacity = .9;
+  for (const S of SKIPS) {
+    S.pop = lerp(S.pop, 1, damp(6, dt)); S.g.scale.setScalar(Math.max(.001, S.g.parent === scene ? S.pop : 1));
+    S.contents.scale.y = Math.max(.02, S.fill * .95); drawSkipLabel(S);
+    S.led.position.copy(S.g.position).add(_up.set(0, 1.32, -1.5)); S.led.visible = S.g.visible;
+    S.led.material.color.copy(S.fill >= 1 ? badCol : S.fill > .8 ? warnCol : goodCol);
+    S.led.material.opacity = wake(S.home.x, S.home.z) * (S.fill >= 1 ? (Math.sin(time * 9) > 0 ? 1 : .2) : .8);
+  }
+  if (flyBox) {
+    const f = flyBox; f.t = Math.min(1, f.t + dt / .75);
+    FLY.position.lerpVectors(f.a, f.b, f.t); FLY.position.y += Math.sin(f.t * Math.PI) * .9; FLY.rotation.x += dt * 7; FLY.rotation.z += dt * 4;
+    if (f.t >= 1) { FLY.visible = false; flyBox = null; if (f.then) f.then(); }
+  }
+  if (st.load && carried) {
+    const L = st.load, k = clamp((beatT - L.t0) / 2.2, 0, 1), e = ease(k);
+    carried.position.lerpVectors(L.from, L.to, e); carried.position.y += Math.sin(k * Math.PI) * 1.6;
+    carried.rotation.y = -Math.PI / 2 * e;
+    if (k >= 1) {
+      truckG.attach(carried); st.load = null;
+      later(.6, () => {
+        const S = SKIPS[0]; S.fill = 0; S.pop = .001; S.g.visible = true; Sound.ping();
+        bub('✓ Fresh empty skip', S.at, { cls: 'sign good', dur: 3.5 });
+        fGo(truckF, toWorld([[14.1, 21.5], [4, 21.5], [1.2, 20.6], [0, 18.6], [0, 5], [-1.4, 2.4], [-6, 2.2], [-34, 2.2]]), 6.5, () => { truckG.visible = false; });
+      });
+    }
+  }
+  fStep(truckF, dt); truckG.position.set(truckF.x, .04, truckF.z); truckG.rotation.y = truckF.yaw;
+  fStep(vanF, dt); vanG.position.set(vanF.x, .04, vanF.z); vanG.rotation.y = vanF.yaw;
+}
+let gridShown = '';
+function drawGrid() {
+  const { g, c, tex } = gridScreen, Wd = c.width, Hd = c.height;
+  const pc = v => Math.round(clamp(v, 0, 1) * 100);
+  const rows = [['💨 Wind', EN.wind * .55, '#8fd3ff'], ['☀️ Sun', EN.sunK * .45, '#ffcf5a'], ['🌿 Biogas', EN.bio * .12, '#8fe08a'], ['🏙️ Town needs', EN.town * .8, '#ff8fc8']];
+  const key = rows.map(r => pc(r[1])).join() + pc(EN.bat) + (EN.net > .02);
+  if (key === gridShown) return; gridShown = key;
+  g.fillStyle = '#0f1412'; g.fillRect(0, 0, Wd, Hd);
+  g.fillStyle = '#7bd88f'; g.font = '600 22px "JetBrains Mono", monospace'; g.textBaseline = 'middle'; g.fillText('● SMART GRID · LIVE', 24, 34);
+  rows.forEach(([name, v, col3], k) => {
+    const y = 82 + k * 46;
+    g.fillStyle = '#e9e4da'; g.font = '24px "Bricolage Grotesque", sans-serif'; g.fillText(name, 24, y);
+    g.fillStyle = '#2a302d'; g.fillRect(218, y - 11, 190, 22); g.fillStyle = col3; g.fillRect(218, y - 11, 190 * clamp(v / .6, 0, 1), 22);
+    g.fillStyle = '#e9e4da'; g.font = '600 22px "JetBrains Mono", monospace'; g.fillText(Math.round(v * 100) + ' MW', 420, y);
+  });
+  const ch = EN.net > .02;
+  g.fillStyle = ch ? '#7bd88f' : '#6ff0c8'; g.font = '600 24px "JetBrains Mono", monospace';
+  g.fillText(`🔋 Batteries ${pc(EN.bat)}%  ${ch ? '▲ storing' : '▼ to the town'}`, 24, 286);
+  tex.needsUpdate = true;
+}
+
 /* patch every lit material so the wave can wake it up */
 {
   const done = new Set();
@@ -806,7 +1185,7 @@ function stepTod(dt, instant) {
   for (const key of ['top', 'bot', 'sun', 'hs', 'hg', 'fog']) TS[key].lerp(TT[key], k);
   TS.pos.lerp(TT.pos, k);
   for (const key of ['si', 'hi', 'glow']) TS[key] = lerp(TS[key], TT[key], k);
-  sun.color.copy(TS.sun); sun.intensity = TS.si; sun.position.copy(TS.pos).normalize().multiplyScalar(70);
+  sun.color.copy(TS.sun); sun.intensity = TS.si; sun.position.copy(TS.pos).normalize().multiplyScalar(70).add(SUN_C); sun.target.position.copy(SUN_C);
   hemi.color.copy(TS.hs); hemi.groundColor.copy(TS.hg); hemi.intensity = TS.hi;
   G = TS.glow;
   for (const m of glowMats) m.emissiveIntensity = .95 * G + .03;
@@ -1092,12 +1471,13 @@ const Sound = {
 
 /* ================================================================== Tom: moves and poses */
 const hAt = (x, z) => {
+  if (x > EX - 33) return islandH(x - EX, z - EZ);
   if (Math.abs(x - HX) < 1.3 && Math.abs(z - HZ) < 1.2) return .33;
   if (x > -13.6 && x < -4.2 && z > -12 && z < -4) return .7;
   const onB = v => BLOCK.some(b => Math.abs(v - b) <= 6);
   return onB(x) && onB(z) ? .25 : .04;
 };
-const carY = (x, z) => (x > 18.2 && x < 29.8 && z > 2.2 && z < 13.8) ? .27 : hAt(x, z) > .2 ? .25 : .04;
+const carY = (x, z) => x > EX - 33 ? islandH(x - EX, z - EZ) : (x > 18.2 && x < 29.8 && z > 2.2 && z < 13.8) ? .27 : hAt(x, z) > .2 ? .25 : .04;
 
 const POSE0 = { hy: .38, upX: 0, upZ: 0, hdX: 0, hdY: 0, lT: 0, rT: 0, lK: 0, rK: 0, lA: 0, rA: 0, lAZ: -.08, rAZ: .08, lE: -.15, rE: -.15 };
 const tom = { x: HX, z: HZ, y: .3, yaw: 0, yawT: 0, act: 'idle', path: null, speed: 1.3, walkAct: null, then: null, walkPh: 0,
@@ -1127,7 +1507,9 @@ function tomTarget(t) {
   else if (a === 'facepalm') { P.rA = -2.25; P.rE = -2.15; P.rAZ = -.3; P.hdX = .4; P.upX = .14; P.lA = .1; }
   else if (a === 'cheer') { const w = Math.sin(t * 9); P.lA = P.rA = -2.85 + .2 * w; P.lAZ = -.35 - .1 * w; P.rAZ = .35 + .1 * w; P.lE = P.rE = -.2; P.hy = .38 + Math.abs(w) * .03; }
   else if (a === 'lookup') { P.hdX = -.6; P.upX = -.05; }
+  else if (a === 'throw') { P.lA = P.rA = -2.5; P.lE = P.rE = -.1; P.lAZ = .1; P.rAZ = -.1; P.upX = -.14; P.hdX = -.2; }
   else if (a === 'thumb') { P.rA = -1.45; P.rE = -.55; P.rAZ = -.1; P.hdX = -.1; }
+  if (tom.prop === 'box' && a !== 'throw') { P.lA = P.rA = -1.15; P.lE = P.rE = -.5; P.lAZ = .12; P.rAZ = -.12; }
   if (tom.prop === 'phone') { P.rA = -1.05; P.rE = -1.25; P.rAZ = -.22; P.hdX += .42; }
   return P;
 }
@@ -1166,7 +1548,7 @@ function stepTom(dt, time) {
   tom.scale = lerp(tom.scale, tom.scaleT, damp(9, dt));
   const R = TOM.root; R.visible = tom.vis && tom.scale > .03;
   R.position.set(tom.x, tom.y, tom.z); R.rotation.y = tom.yaw; R.scale.setScalar(Math.max(.001, tom.scale));
-  TOM.phone.visible = tom.prop === 'phone'; TOM.food.visible = tom.prop === 'food';
+  TOM.phone.visible = tom.prop === 'phone'; TOM.food.visible = tom.prop === 'food'; TOM.box.visible = tom.prop === 'box';
 }
 
 /* ------------------------------------------------------------------ cars that follow a drawn path */
@@ -1279,7 +1661,7 @@ const BROKEN_AT = new T.Vector3(BROKEN_LAMP.x, 4, BROKEN_LAMP.z + .3);
 const HALL_SIGN_AT = new T.Vector3(-6.7, 2.15, -8.95);
 
 /* ------------------------------------------------------------------ the story, beat by beat */
-const PARTS = { intro: ['One day, two towns', ''], p1: ['Part 1', 'An ordinary town'], rw: ['Rewind', 'Same day, again'], p2: ['Part 2', 'A smart town'], end: ['Conclusion', 'How to convince people'] };
+const PARTS = { intro: ['One day, two towns', ''], p1: ['Part 1', 'An ordinary town'], rw: ['Rewind', 'Same day, again'], p2: ['Part 2', 'A smart town'], p3: ['Part 3', 'Energy & recycling'], end: ['Conclusion', 'How to convince people'] };
 const V = (t, az, el, d, off) => ({ t, az, el, d, off });
 const OVER = V([0, -2, 0], 42, 38, 108);
 const BEDV = V([HX - .55, .7, HZ + .5], 176, 30, 6.2);
@@ -1307,6 +1689,12 @@ function turnIn() { carGo(TURN_IN, 2.4, () => bub('🅿️', atCar, { dur: 2 }),
 const JSON_HTML = `<pre><span class="k">"sensor"</span>: <span class="s">"lamp-17"</span>,
 <span class="k">"people"</span>: <span class="n">1</span>,
 <span class="k">"time"</span>: <span class="s">"22:35"</span></pre><p>No camera. No face. No name.</p>`;
+
+const WIND_JSON = `<pre><span class="k">"turbine"</span>: <span class="n">3</span>,
+<span class="k">"wind"</span>: <span class="s">"30 km/h"</span>,
+<span class="k">"from"</span>: <span class="s">"west"</span></pre><p>Measured every second.</p>`;
+function windNow(a) { EN.windA = a; for (const t of TURBINES) { t.yaw = a + Math.PI; t.nac.rotation.y = t.yaw; } }
+function atQuay() { EN.gateT = EN.gate = 1; if (!(tcar.mode === 'park' && Math.hypot(tcar.x - EX - 14.2, tcar.z - EZ - 12.7) < .5)) carPark(EX + 14.2, EZ + 12.7, 90); tcar.driver = false; }
 
 const B = [
   { part: 'intro', clock: '06:30', tod: 'dawn', smart: false, over: 'title', view: OVER, drift: .035, place: '',
@@ -1512,6 +1900,108 @@ const B = [
       cue(.9, flop); cue(1.2, () => bub('😌', atTom(), { dur: 2.4 })); cue(3.3, () => { houseLight(0); sleep(); });
     } },
 
+  /* ---------------- Part 3: where the energy comes from, where the waste goes */
+  { part: 'p3', clock: '10:00', tod: 'morning', smart: true, city: true, view: V([33, 3, -30], 118, 22, 36), place: 'The edge of town',
+    cap: 'One last thing. Our town needs energy, and it makes waste. Where does it all come from, and where does it go? Let’s follow this power line.',
+    fr: 'Une dernière chose. Notre ville a besoin d’énergie, et elle produit des déchets. D’où vient l’une, où vont les autres ? Suivons cette ligne électrique.',
+    setup() { carPark(-26, 21, 180); tomHide(); } },
+  { part: 'p3', clock: '10:00', tod: 'morning', smart: true, view: V(E3(0, 0, 2), 30, 40, 92), camK: .9, drift: .03, place: 'The energy park',
+    cap: 'Just outside town: a wind farm, a solar park, and the recycling centre. Everything is connected, and everything has sensors.',
+    fr: 'Juste à côté de la ville : un parc éolien, un parc solaire et la déchèterie. Tout est relié, et tout a des capteurs.',
+    setup() { carPark(-26, 21, 180); tomHide(); } },
+  { part: 'p3', clock: '10:05', tod: 'morning', smart: true, view: V(E3(0, 9.5, -21), 22, 12, 48), place: 'The wind farm',
+    cap: 'This is the wind farm. On every turbine, sensors measure the wind every second: how strong it is, and where it comes from.',
+    fr: 'Voici le parc éolien. Sur chaque éolienne, des capteurs mesurent le vent à chaque seconde : sa force, et d’où il vient.',
+    setup() {
+      carPark(-26, 21, 180); tomHide();
+      cue(.5, () => TURBINES.forEach((t, i) => later(i * .2, () => { t.pulse = 1; })));
+      cue(1.6, () => bub(WIND_JSON, TURBINES[2].at, { cls: 'json' }));
+    } },
+  { part: 'p3', clock: '10:10', tod: 'morning', smart: true, view: V(E3(0, 9.5, -21), 36, 13, 47), place: 'The wind farm',
+    cap: 'The wind turns? The turbines turn with it, by themselves, to face it and catch as much wind as possible.',
+    fr: 'Le vent tourne ? Les éoliennes tournent avec lui, toutes seules, pour lui faire face et capter le plus de vent possible.',
+    setup() {
+      carPark(-26, 21, 180); tomHide();
+      cue(1.2, () => { EN.windA = Math.PI; EN.windT = 1; TURBINES.forEach((t, i) => { t.wait = .3 + i * .45; }); bub('💨 The wind turns', ev(-16, 15, -16), { cls: 'sign', dur: 3 }); Sound.whoosh(false); });
+      cue(5.6, () => bub('✓ Facing the wind', TURBINES[2].at, { cls: 'sign good', dur: 4 }));
+    } },
+  { part: 'p3', clock: '10:30', tod: 'morning', smart: true, view: V(E3(2, 7, -13), 40, 18, 34), place: 'Turbine 3',
+    cap: 'And when a part starts to wear out, the sensors warn the technicians before it breaks. No surprise breakdown, no wind wasted.',
+    fr: 'Et quand une pièce commence à s’user, les capteurs préviennent les techniciens avant la panne. Pas de panne surprise, pas de vent perdu.',
+    setup() {
+      carPark(-26, 21, 180); tomHide(); windNow(Math.PI);
+      cue(.6, () => { EN.maint = true; Sound.alarm(); });
+      cue(1.3, () => { note('🔧', 'Turbine 3', 'A bearing is starting to wear. Repair planned on Tuesday, before it breaks.', TURBINES[2].at); Sound.ping(); });
+      cue(3, () => fGo(vanF, toWorld([[6, -1.6], [6, -12.4], [4.8, -13.5], [1.8, -13.6], [1.1, -16]]), 3.4, () => bub('👷', () => _cp.set(vanF.x, 1.9, vanF.z), { dur: 3 })));
+    } },
+  { part: 'p3', clock: '11:00', tod: 'morning', smart: true, view: V(null, 32, 26, 15), follow: carPos, place: 'The recycling centre',
+    cap: '11:00. Tom brings his old boxes to the recycling centre, right next door. His resident card opens the gate: no queue, no paperwork.',
+    fr: '11 h. Tom apporte ses vieux cartons à la déchèterie, juste à côté. Sa carte d’habitant ouvre la barrière : pas de file, pas de papiers.',
+    setup() {
+      tomHide(); windNow(Math.PI); carPark(EX - 9, EZ + 3.85, 90); tcar.driver = true;
+      cue(.3, () => carGo(toWorld([[.4, 3.85], [2.5, 4.6], [3, 5.6]]), 4.6, () => {
+        later(.3, () => { note('♻️', 'Recycling centre', 'Hello Tom! Resident card OK ✓', GATE_AT); Sound.ping(); EN.gateT = 1; });
+        later(1.9, () => carGo(toWorld([[3, 8.6], [3, 11.2], [3.9, 12.7], [6.5, 12.7], [9.6, 12.7], [14.2, 12.7]]), 3.6, () => bub('📦', atCar, { dur: 2.2 }), { fromHere: true }));
+      }, { fromHere: true }));
+    } },
+  { part: 'p3', clock: '11:05', tod: 'morning', smart: true, view: V(E3(15, 1.5, 16), 14, 24, 11.5), place: 'The recycling centre',
+    cap: 'Every skip has a sensor that measures how full it is. Tom’s box goes into the cardboard skip… and now it’s full.',
+    fr: 'Chaque benne a un capteur qui mesure son remplissage. Le carton de Tom va dans la benne à cartons… et maintenant, elle est pleine.',
+    setup() {
+      windNow(Math.PI); atQuay(); tomAppear(EX + 14.5, EZ + 13.75, 180); tom.prop = 'box';
+      cue(.3, () => bub('📡 Cardboard: 93% full', SKIPS[0].at, { cls: 'sign', dur: 3 }));
+      cue(.8, () => tomWalk([[EX + 15, EZ + 14.95]], 1.1, () => tomDo('idle', 0)));
+      cue(2.7, () => tomDo('throw'));
+      cue(2.95, () => { tom.prop = null; throwBox(ev(15, QUAY_Y + .85, 15.2), ev(15, .95, 17.6), () => {
+        SKIPS[0].fill = 1; Sound.thud(); later(.5, () => bub('📡 100%: the skip calls the truck', SKIPS[0].at, { cls: 'sign good' }));
+      }); });
+      cue(3.9, () => tomDo('thumb'));
+    } },
+  { part: 'p3', clock: '11:20', tod: 'morning', smart: true, view: V(E3(18, 1, 19), 26, 30, 21), place: 'The recycling centre',
+    cap: 'The skip calls the truck by itself. The truck only comes when a skip is full: fewer trips, less fuel, less pollution.',
+    fr: 'La benne appelle le camion toute seule. Le camion ne vient que quand une benne est pleine : moins de trajets, moins de carburant, moins de pollution.',
+    setup() {
+      windNow(Math.PI); atQuay(); SKIPS[0].fill = 1; ensureTom(EX + 15, EZ + 14.95, 0);
+      cue(.3, () => bub('🚚 Truck on its way', SKIPS[0].at, { cls: 'sign', dur: 3.5 }));
+      cue(.5, truckRun);
+      cue(8.5, () => tomDo('thumb'));
+    } },
+  { part: 'p3', clock: '11:30', tod: 'morning', smart: true, view: V(E3(21, 1.5, -4.5), 26, 22, 20), place: 'The methanizer',
+    cap: 'And the green waste? It goes into these domes. It makes gas, the gas makes electricity, and what is left becomes compost for the parks.',
+    fr: 'Et les déchets verts ? Ils vont dans ces dômes. Ça produit du gaz, le gaz produit de l’électricité, et le reste devient du compost pour les parcs.',
+    setup() {
+      windNow(Math.PI); atQuay(); tomHide(); EN.bio = 1;
+      cue(.8, () => bub('🌿 Green waste', COMPOST_AT, { cls: 'sign good' }));
+      cue(2.6, () => bub('🔥 Gas', GAS_AT, { cls: 'sign good' }));
+      cue(4.4, () => bub('⚡ Electricity', GEN_AT, { cls: 'sign good' }));
+      cue(6.2, () => bub('🌱 Compost for the parks', ev(14.6, 1.6, -8.4), { cls: 'sign good' }));
+    } },
+  { part: 'p3', clock: '08:00', tod: 'morning', smart: true, view: V(E3(-15, 1, 18), -30, 32, 30), place: 'The solar park',
+    cap: 'Now, let’s speed up the day. In the solar park, the panels follow the sun from morning to evening, to catch as much light as possible.',
+    fr: 'Maintenant, on accélère la journée. Dans le parc solaire, les panneaux suivent le soleil du matin au soir, pour capter le plus de lumière possible.',
+    setup() { windNow(Math.PI); atQuay(); tomHide(); cue(3, () => bub('☀️ Following the sun', ev(-15, 3.4, 18), { cls: 'sign good', dur: 5 })); },
+    run(t, dt, st) {
+      const k = clamp((t - .8) / 9, 0, 1), m = Math.round((480 + k * 660) / 10) * 10;
+      if (m !== st.m) { st.m = m; const c = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`; setClock(c); capMeta.textContent = `${c} · The solar park`; }
+      setTod(k < .22 ? 'morning' : k < .5 ? 'noon' : k < .8 ? 'afternoon' : 'sunset');
+    } },
+  { part: 'p3', clock: '19:00', tod: 'sunset', smart: true, view: V(E3(-6.5, 1.8, -4.4), 24, 20, 19), place: 'The smart grid',
+    cap: 'All this energy arrives here. The smart grid decides, every second: send it to the town now, or store it in the batteries for tonight.',
+    fr: 'Toute cette énergie arrive ici. Le réseau intelligent décide, à chaque seconde : l’envoyer à la ville maintenant, ou la stocker dans les batteries pour ce soir.',
+    setup() {
+      windNow(Math.PI); atQuay(); tomHide(); EN.bat = .4;
+      cue(1.2, () => bub('⚡ To the town', ev(-20, 8.2, -4.4), { cls: 'sign good', dur: 4.5 }));
+      cue(2.6, () => bub('🔋 Storing for tonight', ev(-9, 2.4, -2.2), { cls: 'sign good' }));
+    } },
+  { part: 'p3', clock: '22:00', tod: 'night', smart: true, view: V(E3(-10, 2.5, -4), 58, 20, 27), place: 'The smart grid, at night',
+    cap: 'At night, there is no sun. So the batteries give their energy back to the town. Nothing is wasted.',
+    fr: 'La nuit, il n’y a plus de soleil. Alors les batteries rendent leur énergie à la ville. Rien n’est gaspillé.',
+    setup() { windNow(Math.PI); atQuay(); tomHide(); EN.town = .95; EN.bat = .95; cue(1.4, () => bub('🔋 → 🏙️ Power for the town', ev(-9, 2.4, -2.2), { cls: 'sign good' })); } },
+  { part: 'p3', clock: '22:00', tod: 'night', smart: true, view: V(E3(-4, 0, 0), -38, 38, 90), drift: .03, place: 'The energy park',
+    cap: 'Wind, sun, and even our waste: the town makes its own clean energy, and uses it smartly. That’s a smart city too.',
+    fr: 'Le vent, le soleil, et même nos déchets : la ville produit sa propre énergie propre, et l’utilise intelligemment. Ça aussi, c’est une smart city.',
+    setup() { windNow(Math.PI); atQuay(); tomHide(); EN.town = .95; EN.bat = .7; } },
+
   /* ---------------- conclusion */
   { part: 'end', clock: '23:00', tod: 'night', smart: true, over: 'board', view: OVER, drift: .03, place: 'Tom’s day',
     cap: 'So, how do we convince people? We don’t talk to them about sensors or data. We show them their own day.',
@@ -1529,7 +2019,7 @@ const B = [
 function setSmart(v, animate) {
   if (v === smart && !animate) return;
   smart = v; WAVE.uC.value.set(0, 0);
-  if (!animate) waveR = v ? 130 : 0; else if (v) { waveR = 0; Sound.whoosh(true); }
+  if (!animate) waveR = v ? WMAX : 0; else if (v) { waveR = 0; Sound.whoosh(true); }
   body.classList.toggle('is-smart', v);
 }
 
@@ -1554,7 +2044,7 @@ function syncHUD(b) {
   $('#subs').classList.remove('in'); void $('#subs').offsetWidth; $('#subs').classList.add('in');
   [...prog.children].forEach((d, i) => { d.classList.toggle('on', i === beatI); d.classList.toggle('done', i < beatI); });
   for (const id of ['title', 'board', 'final']) $('#' + id).hidden = b.over !== id;
-  $('#day').hidden = !(b.part === 'p1' || b.part === 'p2');
+  $('#day').hidden = !(b.part === 'p1' || b.part === 'p2' || b.part === 'p3'); $('#day').classList.toggle('nolost', b.part === 'p3');
   $('#b-fr').setAttribute('aria-pressed', String(fr));
 }
 
@@ -1566,6 +2056,8 @@ function go(i) {
   tom.path = null; tom.then = null; tom.prop = null; tom.glide = null; tom.walkAct = null;
   tcar.onU = null; tcar.stopAt = null; tcar.onStop = null; tcar.green = false;
   leaver.moving = false; binsMode = null; alarmShake = 0;
+  energyReset();
+  const onIsland = b.part === 'p3' && !b.city; SUN_C.set(onIsland ? EX : 0, 0, onIsland ? EZ : 0);
   body.classList.remove('rewinding'); $('#rew').hidden = true;
   if (b.smart === 'wave') setSmart(false); else setSmart(!!b.smart);
   lotSet(!!b.smart);
@@ -1652,7 +2144,7 @@ function setView(v, instant) {
   }
 }
 function updateCamera(dt) {
-  const k = dragging ? 14 : 2.2;
+  const k = dragging ? 14 : (B[beatI] && B[beatI].camK) || 2.2;
   cam.t.lerp(goal.t, damp(k, dt)); cam.az = lerp(cam.az, goal.az, damp(k, dt)); cam.el = lerp(cam.el, goal.el, damp(k, dt)); cam.d = lerp(cam.d, goal.d, damp(k, dt));
   const ce = Math.cos(cam.el);
   camera.position.set(cam.t.x + cam.d * ce * Math.sin(cam.az), cam.t.y + cam.d * Math.sin(cam.el), cam.t.z + cam.d * ce * Math.cos(cam.az));
@@ -1728,7 +2220,7 @@ function tomExhaust(dt) {
 let simT = 0;
 function tick(dt) {
   simT += dt; const time = simT;
-  if (smart) waveR = reduced ? 130 : Math.min(130, waveR + dt * (9 + waveR * .12));
+  if (smart) waveR = reduced ? WMAX : Math.min(WMAX, waveR + dt * (9 + waveR * .12));
   else waveR = Math.max(0, waveR - dt * 30);
   WAVE.uR.value = waveR;
   WAVE.uEdgeOn.value = lerp(WAVE.uEdgeOn.value, smart && waveR < 110 ? 1 : 0, damp(4, dt));
@@ -1738,7 +2230,7 @@ function tick(dt) {
   stepStory(dt);
   stepTod(dt);
   stepLights(dt); stepCars(dt); stepBus(dt); stepPeople(dt, time); stepBins(dt); stepSmog(dt, time);
-  stepTomCar(dt); stepTom(dt, time); tomExhaust(dt);
+  stepTomCar(dt); stepTom(dt, time); tomExhaust(dt); stepEnergy(dt, time);
   renderCars();
   lastLight = stepLamps(dt);
 
@@ -1795,7 +2287,7 @@ function tick(dt) {
   house.light.intensity = house.k * 1.7; glassM.emissiveIntensity = house.k * 1.2;
 
   updateCamera(dt); occlude();
-  mt += dt; if (mt > .25) { mt = 0; tickMetrics(); }
+  mt += dt; if (mt > .25) { mt = 0; tickMetrics(); drawGrid(); }
 }
 const occRay = new T.Raycaster(), _od = new T.Vector3(), _rx = new T.Vector3();
 let occN = 0;
