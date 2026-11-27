@@ -6,92 +6,6 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 if (!window.THREE) { $('#nogl').hidden = false; return; }
 const T = THREE;
 
-/* ------------------------------------------------------------------ content */
-const ACTS = [
-  { label: 'Part I', q: 'A day in your life' },
-  { label: 'Part II', q: 'Your fears' },
-  { label: 'Part III', q: 'Your say' },
-  { label: 'Answer', q: 'How to convince people' },
-];
-const INTRO = { time: '18:00', tod: 'sunset', notes: "In this situation, I am the IT technician of our town hall. The mayor wants to turn our town into a smart city, and he asked me how to convince people that it is good for their way of life. My answer is simple: don't talk about technology, show people their own day. Here is our town today: grey, polluted, stuck in traffic. Now watch what happens when it becomes smart. [Press S.] Let's follow one resident through a normal day." };
-
-const STOPS = [
-  { short: 'Leaving home', act: 0, time: '07:30', tod: 'dawn', title: 'Leaving home', key: 'Document C · key 4 · Urban mobility',
-    anchor: [0, 3.2, 0], view: { t: [0, 0, 0], az: 38, el: 36, d: 30 },
-    today: 'You drive to work. The light turns red for an empty street, again and again. You arrive late and stressed.',
-    smart: 'Sensors count the cars. The lights give green where people are waiting and let the traffic flow in waves.',
-    forYou: 'Less time stuck at red lights. More time at home in the morning.',
-    proof: 'In Pittsburgh, adaptive lights called Surtrac cut travel time by about 25% and waiting at red lights by about 40%.',
-    src: 'Figures reported by the Carnegie Mellon team for the first pilot.',
-    notes: "7:30, you leave home and drive to work. Today, you stop at red lights even when nobody is crossing. In a smart city, the lights adapt to the real traffic. In Pittsburgh, people spent about 25 percent less time in their car. That is my first argument for the citizens: time." },
-  { short: 'The bus', act: 0, time: '08:10', tod: 'morning', title: 'Catching the bus', key: 'Document C · key 4 · Sustainable public transport',
-    anchor: [14, 3, 4], view: { t: [13.5, 1, 3.5], az: 167, el: 27, d: 16 },
-    today: 'You don’t know when the bus will come. You wait in the cold, or you give up and take the car.',
-    smart: 'The stop and your phone show the real waiting time. The traffic lights let the bus go first.',
-    forYou: 'You leave home at the right minute, and the bus becomes faster than the car.',
-    notes: "8:10, you take the bus. Today, nobody knows when it will come, so people take their car. In a smart city, the bus shares its position: the screen at the stop and the app show the real waiting time, and the lights let the bus go first. You leave home at the right minute." },
-  { short: 'The park', act: 0, time: '12:30', tod: 'noon', title: 'Lunch in the park', key: 'Document C · key 6 · Environmental sustainability',
-    anchor: [8, 3.4, 9], view: { t: [8, 1, 7], az: 18, el: 32, d: 26 },
-    today: 'On busy days the air is heavy with exhaust. Nobody warns you, even if your child has asthma.',
-    smart: 'Air sensors measure pollution street by street and send an alert on bad days. Solar roofs and a wind turbine make local energy.',
-    forYou: 'Cleaner air, and a warning on your phone before you go out with your kids.',
-    notes: "12:30, lunch in the park. Look at the smog in the ordinary town: cars waiting with their engine on. In the smart town, there are fewer traffic jams, so the air is cleaner, and sensors warn people with asthma on bad days. That is an argument about health, not about technology." },
-  { short: 'Grandma', act: 0, time: '14:00', tod: 'afternoon', title: 'Grandma’s check-up', key: 'Document C · key 9 · Technologies applied to health',
-    anchor: [24.5, 7.2, -25.5], view: { t: [24.5, 2.5, -24], az: -40, el: 40, d: 34 },
-    today: 'Your grandmother takes two buses to see her doctor for a five-minute check-up.',
-    smart: 'A video consultation, and a connected device that sends her blood pressure to the doctor.',
-    forYou: 'She stays at home, safe, and the doctor still keeps an eye on her.',
-    notes: "2 p.m., your grandmother needs a check-up. Today she travels across town for five minutes with the doctor. In a smart city, she can see the doctor by video, and a connected device sends her blood pressure. She stays home, and the hospital is free for real emergencies." },
-  { short: 'School', act: 0, time: '16:30', tod: 'afternoon', title: 'Picking up the kids', key: 'Document C · key 8 · Technologies applied to education',
-    anchor: [24, 5.4, 25], view: { t: [24, 1.5, 24], az: -140, el: 30, d: 21 },
-    today: 'Some pupils have a computer and fast internet at home. Others don’t. Homework is not fair.',
-    smart: 'Wi-Fi in every classroom, a digital workspace shared with parents, laptops lent to the families who need them.',
-    forYou: 'Your kids learn with the same tools as everyone, and you can follow their homework.',
-    notes: "4:30 p.m., you pick up the kids. In a smart city, every classroom is connected, parents and teachers share a digital workspace, and families who need a laptop can borrow one. For parents, the argument is equality for their children." },
-  { short: 'Your street', act: 0, time: '18:00', tod: 'sunset', title: 'Back in your street', key: 'Document C · key 5 · Smart waste management',
-    anchor: [-3.3, 2.6, 8.2], view: { t: [-3.2, 0.5, 8.4], az: 74, el: 30, d: 16 },
-    today: 'The bin at your door has been full for two days. Bags pile up on the pavement.',
-    smart: 'Each bin knows how full it is. The truck comes when it is needed and skips the empty ones.',
-    forYou: 'A clean street, and fewer trucks blocking the road for nothing.',
-    notes: "6 p.m., you come back to your street. Today, the bin has been full for two days, while the truck empties half-empty bins somewhere else. With a fill sensor, the truck only comes when it is needed. People notice a clean street immediately." },
-  { short: 'Walking home', act: 0, time: '22:30', tod: 'night', title: 'Walking home', key: 'Document C · keys 2 and 6 · Automation and environment',
-    anchor: [0, 4.4, -24], view: { t: [0, 1, -23], az: 8, el: 20, d: 20 },
-    today: 'Streetlights burn at full power all night on empty streets. When one breaks, nobody knows for weeks.',
-    smart: 'LED lights dim when the street is empty and light up as you walk. A broken lamp reports itself.',
-    forYou: 'You walk home in the light, and the money saved on electricity can pay for something else.',
-    proof: 'In 2017, Dijon Métropole signed a 12-year, 105 million euro contract to run its 23 towns from one control centre. Its target: 65% less energy for street lighting.',
-    src: 'The 65% is a target written in the contract, not a measured result.',
-    notes: "10:30 p.m., you walk home. Today, every lamp burns all night, even on empty streets. In a smart city, the light follows you, and a broken lamp reports itself. You feel safe, and the town saves money. Dijon, in France, set a target of 65 percent energy savings on street lighting." },
-  { short: 'Watched?', act: 1, time: '23:00', tod: 'night', title: 'Is someone watching me?', key: 'Privacy by design',
-    anchor: [2.7, 3.8, 2.7], view: { t: [2.7, 2.6, 2.7], az: 45, el: 12, d: 8 },
-    today: 'People imagine cameras on every corner and a town that tracks where they go.',
-    smart: 'Our sensors count, they don’t film. No faces, no number plates. The data is made anonymous inside the box and deleted after 30 days.',
-    forYou: 'The town knows how many cars are waiting. It never knows that it’s you.',
-    special: 'json',
-    proof: 'The GDPR (2018) makes this the law: collect the minimum, say why, delete on time. In France, the CNIL can check us.',
-    proofLab: 'The law',
-    notes: "To convince people, we must also answer their fears. The first fear is: is someone watching me? My rule is: count, don't film. Here is exactly what this sensor sends: a number of cars, a time, a direction. Nothing about a person. And the GDPR makes it the law." },
-  { short: 'Hacked?', act: 1, time: '23:30', tod: 'night', title: 'Can someone hack it?', key: 'My job: IT technician, BTS CIEL',
-    anchor: [-24.5, 4.6, -24.5], view: { t: [-24, 2, -24], az: 48, el: 30, d: 30 },
-    today: 'A badly protected town can be attacked: lights switched off, traffic blocked, personal data stolen.',
-    smart: '<ul><li><b>Encrypt everything,</b> in transit and at rest.</li><li><b>Separate the networks.</b> A hacked bin cannot reach the town hall.</li><li><b>Control access,</b> with two-factor login.</li><li><b>Patch, test, back up</b> every device.</li><li><b>Stay in Europe,</b> under the GDPR.</li></ul>',
-    forYou: 'Your data stays in Europe, encrypted, and protected by people whose job is to protect it.',
-    special: 'attack',
-    notes: "The second fear is: can someone hack it? This is my job, and what I study in my BTS CIEL. Five rules: encrypt, separate the networks, control access, update and test, and keep the data in Europe. Let me show you an attack. In the ordinary town it reaches the servers. In the smart town, it is blocked." },
-  { short: 'Your say', act: 2, time: '10:00', tod: 'morning', title: 'Having your say', key: 'Document C · keys 7, 11 and 12 · Social environment, transparency, open data',
-    anchor: [-8.5, 8.6, -8], view: { t: [0, 2, -8.5], az: 92, el: 26, d: 30 },
-    today: 'Projects are decided at the town hall. You hear about them when the roadworks start.',
-    smart: 'Everything the town measures is public, live, on the screen at the town hall and in an app. You vote on projects, report a pothole, scan the QR code on any sensor. A person at the desk helps those who are not online.',
-    forYou: 'You see the results, and you decide what comes next.',
-    proof: 'Toronto, 2020: Sidewalk Labs, a sister company of Google, dropped its smart neighbourhood project. It blamed the economy, but the project had faced years of criticism about privacy and about who controls the data.',
-    proofLab: 'The counter-example',
-    notes: "The next morning, you have your say. In a smart city, everything the town measures is public: on this screen and in an app. People vote on projects and report problems. And there is always a human at the desk. Toronto is the counter-example: a smart district project was dropped in 2020 after years of criticism about privacy. People must be part of the project, not its target." },
-  { short: 'The answer', act: 3, time: '18:00', tod: 'sunset', title: 'How to convince people', key: 'My answer to the mayor',
-    anchor: [8, 19.5, -24], view: { t: [0, -2, 0], az: -32, el: 36, d: 100 },
-    special: 'convince',
-    notes: "So, how do we convince people that a smart city is good for their way of life? Five ideas. One: show, don't explain, like with this model, and start with a pilot district. Two: talk about their day, not about technology. Three: prove it, and publish the results. Four: protect their data, and say how. Five: let them decide, and keep a human answer for everyone. For me, a smart city is not a city full of sensors. It is a city that listens to its people, and protects what it hears. Thank you. Do you have any questions?" },
-];
-
 /* time of day */
 const TOD = {
   dawn:      { label: 'Early morning', top: '#6d86b0', bot: '#ffc395', sun: '#ffc58f', si: 1.6, pos: [44, 15, -22], hs: '#c9d4ef', hg: '#5a4436', hi: .8, glow: .55, fog: '#d8b9a3' },
@@ -277,6 +191,7 @@ function mcyl(rt, rb, h, seg, mat, x, y, z, parent = scene, shadow = true) {
   const m = new T.Mesh(new T.CylinderGeometry(rt, rb, h, seg), mat); m.position.set(x, y + h / 2, z);
   m.castShadow = shadow; m.receiveShadow = true; parent.add(m); return m;
 }
+const OCC = [];   // buildings that step aside when they hide Tom from the camera
 function addBuilding(x, z, w, d, h, token, base = .25, parent = scene) {
   const geo = new T.BoxGeometry(w, h, d), uv = geo.attributes.uv;
   const dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
@@ -286,7 +201,7 @@ function addBuilding(x, z, w, d, h, token, base = .25, parent = scene) {
   }
   geo.translate(0, h / 2, 0);
   const s = sideMat(token), m = new T.Mesh(geo, [s, s, M.roof, M.roof, s, s]);
-  m.position.set(x, base, z); m.castShadow = m.receiveShadow = true; parent.add(m);
+  m.position.set(x, base, z); m.castShadow = m.receiveShadow = true; parent.add(m); OCC.push(m);
   return m;
 }
 function gable(x, y, z, len, width, height, mat, alongX = true) {
@@ -332,7 +247,7 @@ const ROADS = [-16, 0, 16], HALF = 36, BLOCK = [-24, -8, 8, 24];
 }
 
 /* ------------------------------------------------------------------ ordinary blocks */
-const GEN = [[-24, -8, 4, 11], [-24, 8, 4, 10], [24, -8, 5, 12], [24, 8, 4, 10], [-8, -24, 8, 19], [8, -24, 7, 17], [-8, 24, 4, 9], [8, 24, 4, 9]];
+const GEN = [[-24, -8, 4, 11], [-24, 8, 4, 10], [24, -8, 5, 12], [-8, -24, 8, 19], [8, -24, 7, 17], [-8, 24, 4, 9], [8, 24, 4, 9]];
 const TOKENS = ['--s-b1', '--s-b2', '--s-b3', '--s-b1', '--s-b2'];
 for (const [cx, cz, hmin, hmax] of GEN) {
   if (hmax > 15 && rnd() < .7) {
@@ -355,10 +270,7 @@ for (const [cx, cz, hmin, hmax] of GEN) {
 
 /* ------------------------------------------------------------------ landmarks */
 const HIT = [];
-function hitbox(i, x, y, z, w, h, d) {
-  const m = new T.Mesh(new T.BoxGeometry(w, h, d), new T.MeshBasicMaterial({ visible: false }));
-  m.position.set(x, y + h / 2, z); m.userData.stop = i; scene.add(m); HIT.push(m);
-}
+function hitbox() {}
 const S_CROSS = 0, S_BUS = 1, S_PARK = 2, S_HOSP = 3, S_SCHOOL = 4, S_BINS = 5, S_LAMPS = 6, S_SENSOR = 7, S_SERVER = 8, S_SAY = 9;
 
 // town hall (-8,-8)
@@ -466,6 +378,7 @@ function solar(x, y, z, w, d, tilt = 0, rotY = 0) {
 {
   let k = 0;
   for (const z of [20.4, 27.6]) for (const x of [-28, -24, -20]) {
+    if (x === -28 && z === 20.4) { k++; continue; } // Tom's house is built on its own, open like a doll's house
     mbox(2.8, 1.9, 2.6, k % 2 ? M.b3 : M.b1, x, .25, z);
     gable(x, 2.15, z, 3.1, 2.9, .85, M.tile, true);
     solar(x, 2.62, z + .72, 2.1, .95, .5);
@@ -566,8 +479,11 @@ const LAMPS = [];
     glow.position.set(hx, 3.3, hz); glow.scale.setScalar(2.2); scene.add(glow);
     const pool = new T.Mesh(poolGeo, new T.MeshBasicMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false }));
     pool.position.set(hx, .08, hz); scene.add(pool);
-    LAMPS.push({ x: hx, z: hz, i: 1, hm, glow, pool });
+    LAMPS.push({ x: hx, z: hz, i: 1, hm, glow, pool, px: x, pz: z });
   };
+  // Tom's street: one lamp carries a presence sensor, one is broken in the ordinary town
+  for (const x of [-10.5, -21, -25.6, -30.4]) add(x, 18.45, x, 17.7);
+  LAMPS[LAMPS.length - 3].sensor = true; LAMPS[LAMPS.length - 2].broken = true;
   for (let s = -31.2; s <= 31.2; s += 5.2) {
     if (ROADS.some(r => Math.abs(s - r) < 3.6)) continue;
     add(2.45, s, 1.7, s); add(-2.45, s + 2.6, -1.7, s + 2.6);
@@ -690,6 +606,167 @@ for (const t of [[22, 4, -9], [26.8, 4, -6.2], [21.4, 3.2, -2.4]]) arc([24.5, 6.
 const ATTACKS = [], BURSTS = [];
 let attackRun = null, dcAlarm = 0, shieldFlash = 0;
 
+/* ================================================================== Tom's world */
+const HX = -28, HZ = 20.4;                       // Tom's house
+const std = c => new T.MeshStandardMaterial({ color: lin(c), roughness: .85 });
+function canvasPlane(cw, ch, w, h) {
+  const [c, g] = cnv(cw, ch), tex = ctex(c);
+  const mesh = new T.Mesh(new T.PlaneGeometry(w, h), new T.MeshBasicMaterial({ map: tex, toneMapped: false, side: T.DoubleSide }));
+  scene.add(mesh); return { c, g, tex, mesh, key: '' };
+}
+function tree(x, z, s = 1, y = .25) {
+  const t = new T.Mesh(new T.CylinderGeometry(.1 * s, .14 * s, s, 6), M.trunk); t.position.set(x, y + .5 * s, z); t.castShadow = true; scene.add(t);
+  const c = new T.Mesh(new T.IcosahedronGeometry(.8 * s, 0), M.tree); c.position.set(x, y + 1.45 * s, z); c.scale.y = 1.2; c.castShadow = true; scene.add(c);
+}
+
+/* cars you can drive (Tom's) or that stay parked */
+const wheelGeo = new T.CylinderGeometry(.17, .17, .12, 12).rotateZ(Math.PI / 2);
+const cabMat = new T.MeshStandardMaterial({ color: 0x2a2d33, roughness: .2, metalness: .5 });
+function makeCar(color, mine = false) {
+  const g = new T.Group();
+  const bodyM = mine ? noWave(new T.MeshStandardMaterial({ color: lin(color), roughness: .35, metalness: .25 })) : new T.MeshStandardMaterial({ color: lin(color), roughness: .45, metalness: .2 });
+  const body = new T.Mesh(new T.BoxGeometry(.95, .42, 1.9), bodyM); body.position.y = .38; body.castShadow = true; body.receiveShadow = true; g.add(body);
+  const cabM = mine ? noWave(new T.MeshStandardMaterial({ color: 0xbfe0ee, roughness: .05, metalness: .2, transparent: true, opacity: .42 })) : cabMat;
+  const cab = new T.Mesh(new T.BoxGeometry(.82, .36, 1), cabM); cab.position.set(0, .77, -.1); cab.castShadow = !mine; g.add(cab);
+  const wm = mine ? noWave(new T.MeshStandardMaterial({ color: 0x1d1b1a, roughness: .8 })) : M.dark;
+  for (const [x, z] of [[-.46, .6], [.46, .6], [-.46, -.62], [.46, -.62]]) { const w = new T.Mesh(wheelGeo, wm); w.position.set(x, .17, z); g.add(w); }
+  if (mine) {
+    const lm = noWave(new T.MeshStandardMaterial({ color: 0xfff2cc, emissive: 0xffe2a0, emissiveIntensity: .3 }));
+    for (const x of [-.3, .3]) { const l = new T.Mesh(new T.BoxGeometry(.18, .09, .04), lm); l.position.set(x, .44, .96); g.add(l); }
+    g.userData.lights = lm;
+  }
+  return g;
+}
+
+/* Tom's house: a doll's house, the front wall and the roof lift off for the bedroom shots */
+const glassM = new T.MeshStandardMaterial({ color: lin('#9fc4d6'), emissive: lin('#ffc887'), emissiveIntensity: 0, roughness: .2 });
+const house = { front: new T.Group(), roof: new T.Group(), open: false, light: new T.PointLight(0xffc48a, 0, 6, 2), k: 0, target: 0 };
+scene.add(house.front, house.roof);
+house.light.position.set(HX - .1, 1.75, HZ + .1); scene.add(house.light);
+const alarm = new T.Group();
+const alarmFace = (() => { const [c, g] = cnv(128, 64), tex = ctex(c); return { c, g, tex, txt: '' }; })();
+const THERMO = new T.Vector3(HX + 1.24, 1.55, HZ - .55);
+{
+  const y0 = .25, wall = M.b1, wood = std('#a87d5a');
+  mbox(2.8, 1.9, .1, wall, HX, y0, HZ + 1.25);
+  mbox(.1, 1.9, 2.6, wall, HX - 1.35, y0, HZ);
+  mbox(.1, 1.9, 2.6, wall, HX + 1.35, y0, HZ);
+  house.front.add(mbox(2.8, 1.9, .1, wall, HX, y0, HZ - 1.25));
+  house.front.add(mbox(.62, 1.28, .05, M.trunk, HX, y0, HZ - 1.31));
+  house.front.add(mbox(.66, .48, .04, glassM, HX + .86, y0 + .9, HZ - 1.31));
+  house.front.add(mbox(.66, .48, .04, glassM, HX - .86, y0 + .9, HZ - 1.31));
+  house.roof.add(gable(HX, 2.15, HZ, 3.1, 2.9, .85, M.tile, true));
+  solar(HX, 2.62, HZ + .72, 2.1, .95, .5); house.roof.add(PANELS[PANELS.length - 1]);
+  // inside
+  mbox(2.6, .08, 2.4, std('#b8916c'), HX, y0, HZ);
+  mbox(.72, .5, .04, glassM, HX + .45, y0 + .95, HZ + 1.19);
+  mbox(.9, .012, .7, std('#c46d5a'), HX + .2, .33, HZ - .25, scene, false);
+  mbox(1.35, .2, .82, wood, HX - .6, .33, HZ + .75);
+  mbox(.08, .55, .82, wood, HX - 1.25, .33, HZ + .75);
+  mbox(1.25, .1, .74, std('#f1ebe1'), HX - .6, .53, HZ + .75);
+  mbox(.26, .08, .5, std('#ffffff'), HX - 1.05, .63, HZ + .75);
+  mbox(.8, .22, .8, std('#4f78b0'), HX - .22, .6, HZ + .75);
+  mbox(.32, .36, .32, wood, HX - 1.12, .33, HZ + .1);
+  mbox(.5, 1.4, .9, std('#c9a27e'), HX + 1.03, .33, HZ + .62);
+  mbox(.03, .16, .12, M.white, HX + 1.29, .98, HZ - .55);
+  alarm.position.set(HX - 1.12, .69, HZ + .1); scene.add(alarm);
+  const ab = new T.Mesh(new T.BoxGeometry(.17, .1, .07), std('#d24b3f')); ab.position.y = .05; ab.castShadow = true; alarm.add(ab);
+  const face = new T.Mesh(new T.PlaneGeometry(.13, .065), new T.MeshBasicMaterial({ map: alarmFace.tex, toneMapped: false }));
+  face.position.set(0, .05, -.037); face.rotation.y = Math.PI; alarm.add(face);
+}
+function drawAlarm(txt) {
+  if (txt === alarmFace.txt) return; alarmFace.txt = txt;
+  const g = alarmFace.g; g.fillStyle = '#120a08'; g.fillRect(0, 0, 128, 64);
+  g.fillStyle = '#ff4a3a'; g.font = '600 40px "JetBrains Mono", monospace'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 64, 34);
+  alarmFace.tex.needsUpdate = true;
+}
+
+/* the office and its car park (block 24, 8) */
+const LOT = { spots: [21.2, 22.6, 24, 25.4, 26.8, 28.2], z: 12.4, cars: [], discs: [] };
+{
+  mbox(11.6, .02, 11.6, M.road, 24, .25, 8, scene, false);
+  addBuilding(21, 5, 4.8, 4.8, 13, '--s-b2', .27);
+  mbox(.9, 1.15, .04, M.dark, 21, .27, 7.43);
+  mbox(2.1, .12, 4.8, M.grass, 26.8, .27, 6.7);
+  tree(26.8, 5.3, .7, .39); tree(26.8, 8.1, .65, .39);
+  for (const x of [20.5, 21.9, 23.3, 24.7, 26.1, 27.5, 28.9]) mbox(.06, .012, 2, M.mark, x, .27, 12.4, scene, false);
+  const cols = ['#8a9bb0', '#d9c7b0', '#6b7f6a', '#b8574a', '#cfcfcf', '#3d4a5c'];
+  LOT.cars = LOT.spots.map((x, i) => { const g = makeCar(cols[i]); g.position.set(x, .27, LOT.z); scene.add(g); return g; });
+  LOT.discs = LOT.spots.map(x => {
+    const s = new T.Sprite(new T.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false, opacity: 0 }));
+    s.position.set(x, .42, 11.2); s.scale.setScalar(.6); scene.add(s); return s;
+  });
+  mcyl(.05, .05, 1.6, 6, M.dark, 18.75, .25, 14.75);
+}
+const lotSign = canvasPlane(256, 160, .9, .56); lotSign.mesh.position.set(18.75, 2.05, 14.8);
+
+/* the bench by the bins (lunch) */
+mbox(.42, .06, 1.5, M.trunk, -4.5, .49, 8.2);
+mbox(.06, .44, 1.5, M.trunk, -4.73, .55, 8.2);
+for (const z of [7.6, 8.8]) mbox(.36, .24, .06, M.dark, -4.5, .25, z);
+const FLIES = Array.from({ length: 12 }, (_, i) => {
+  const m = new T.Mesh(new T.SphereGeometry(.03, 5, 4), noWave(new T.MeshBasicMaterial({ color: 0x15110f })));
+  m.userData = { z: BINS[i % 6].z, ph: rr(0, 6), r: rr(.22, .5), sp: rr(3, 7) }; m.visible = false; scene.add(m); return m;
+});
+
+/* town hall door + opening hours */
+mbox(.05, 1.5, 1, M.trunk, -6.83, .7, -8);
+const hallSign = canvasPlane(256, 168, .66, .43); hallSign.mesh.position.set(-6.76, 1.62, -8.95); hallSign.mesh.rotation.y = Math.PI / 2;
+
+/* Tom's street: a sensor on one lamp */
+const SENSOR_LAMP = LAMPS.find(L => L.sensor), BROKEN_LAMP = LAMPS.find(L => L.broken);
+mbox(.2, .14, .14, M.white, SENSOR_LAMP.px, 2.45, SENSOR_LAMP.pz);
+const sensorLed2 = new T.Sprite(spriteAccent({ opacity: 0 }));
+sensorLed2.position.set(SENSOR_LAMP.px, 2.6, SENSOR_LAMP.pz - .09); sensorLed2.scale.setScalar(.4); scene.add(sensorLed2);
+
+/* Tom */
+const TOM = (() => {
+  const mat = c => noWave(new T.MeshStandardMaterial({ color: lin(c), roughness: .7 }));
+  const skin = mat('#e9b48f'), hair = mat('#3a2619'), hood = mat('#f2b544'), pants = mat('#38476b'), shoe = mat('#f4efe6');
+  const eye = noWave(new T.MeshBasicMaterial({ color: 0x1a1412 }));
+  const root = new T.Group(), hips = new T.Group(), upper = new T.Group(), head = new T.Group();
+  root.add(hips); hips.add(upper); hips.position.y = .38;
+  const part = (parent, w, h, d, m, y, z = 0) => { const o = new T.Mesh(new T.BoxGeometry(w, h, d), m); o.position.set(0, y, z); o.castShadow = true; parent.add(o); return o; };
+  const legs = [-1, 1].map(sx => {
+    const thigh = new T.Group(); thigh.position.x = sx * .075; hips.add(thigh);
+    part(thigh, .12, .2, .13, pants, -.095);
+    const knee = new T.Group(); knee.position.y = -.19; thigh.add(knee);
+    part(knee, .11, .16, .12, pants, -.08);
+    part(knee, .12, .06, .19, shoe, -.18, .03);
+    return { thigh, knee };
+  });
+  part(upper, .32, .36, .19, hood, .18);
+  part(upper, .2, .09, .03, mat('#d9952a'), .1, .1);
+  head.position.y = .37; upper.add(head);
+  const skull = new T.Mesh(new T.SphereGeometry(.125, 18, 14), skin); skull.position.y = .13; skull.castShadow = true; head.add(skull);
+  const cap = new T.Mesh(new T.SphereGeometry(.133, 18, 10, 0, Math.PI * 2, 0, Math.PI * .5), hair); cap.position.y = .145; cap.rotation.x = -.5; head.add(cap);
+  for (const sx of [-1, 1]) { const e = new T.Mesh(new T.SphereGeometry(.017, 8, 6), eye); e.position.set(sx * .045, .14, .115); head.add(e); }
+  const nose = new T.Mesh(new T.SphereGeometry(.021, 8, 6), skin); nose.position.set(0, .112, .124); head.add(nose);
+  const arms = [-1, 1].map(sx => {
+    const sh = new T.Group(); sh.position.set(sx * .2, .33, 0); upper.add(sh);
+    part(sh, .09, .18, .1, hood, -.085);
+    const el = new T.Group(); el.position.y = -.17; sh.add(el);
+    part(el, .085, .15, .09, hood, -.07);
+    const hand = new T.Mesh(new T.SphereGeometry(.048, 8, 6), skin); hand.position.y = -.17; el.add(hand);
+    return { sh, el };
+  });
+  const phone = new T.Mesh(new T.BoxGeometry(.075, .13, .016), noWave(new T.MeshStandardMaterial({ color: 0x111111, emissive: 0x9ad0ff, emissiveIntensity: .9 })));
+  phone.position.set(0, -.2, .05); phone.rotation.x = -.5; arms[1].el.add(phone); phone.visible = false;
+  const food = new T.Mesh(new T.BoxGeometry(.14, .07, .09), mat('#e6c58a')); food.position.set(0, -.21, .04); arms[1].el.add(food); food.visible = false;
+  scene.add(root);
+  return { root, hips, upper, head, legs, arms, phone, food, skin, hair };
+})();
+
+/* Tom's car, with Tom's head behind the windscreen */
+const tomCarG = makeCar('#e2574c', true);
+{
+  const h = new T.Group(); h.position.set(.2, .7, -.08);
+  const s = new T.Mesh(new T.SphereGeometry(.12, 14, 10), TOM.skin); h.add(s);
+  const c = new T.Mesh(new T.SphereGeometry(.128, 14, 8, 0, Math.PI * 2, 0, Math.PI * .5), TOM.hair); c.position.y = .015; c.rotation.x = -.5; h.add(c);
+  tomCarG.add(h); tomCarG.userData.head = h; h.visible = false;
+}
+scene.add(tomCarG);
+const tomFill = new T.PointLight(0xc9d6ff, 0, 7, 2); scene.add(tomFill);
 /* patch every lit material so the wave can wake it up */
 {
   const done = new Set();
@@ -703,11 +780,9 @@ let attackRun = null, dcAlarm = 0, shieldFlash = 0;
 }
 
 /* ------------------------------------------------------------------ state */
-let smart = false, smartK = 0, current = -1, G = 1;
-const seen = new Set(store.get('city-day-seen') || []);
-const hist = { wait: [], light: [], bins: [], air: [] };
+const body = document.body;
+let smart = false, smartK = 0, G = 1, lastLight = 100;
 let metrics = { wait: 0, light: 100, bins: 0, air: 0 }, idleEMA = 0;
-
 /* ------------------------------------------------------------------ palette + time of day */
 const accentCol = new T.Color(), lampCol = new T.Color(), warnCol = new T.Color(), goodCol = new T.Color(), badCol = new T.Color();
 const SMOG_TINT = lin('#8c8478');
@@ -744,7 +819,6 @@ function paintSky() {
   const s = `linear-gradient(180deg, ${_a.getStyle()} 0%, ${_b.getStyle()} 100%)`;
   if (s !== lastSky) { sky.style.background = s; lastSky = s; }
 }
-
 /* ------------------------------------------------------------------ screens */
 function drawHall() {
   const { g, c, tex } = hallScreen, W = c.width, H = c.height;
@@ -783,7 +857,6 @@ function drawBus() {
   }
   tex.needsUpdate = true;
 }
-
 /* ------------------------------------------------------------------ simulation */
 function nextInter(c) {
   let best = null, bd = 1e9;
@@ -796,6 +869,7 @@ function stepLights(dt) {
   for (const I of INTERS) {
     const sm = wake(I.x, I.z) > .5;
     I.t += dt;
+    if (I.force) { I.g = I.force; I.phase = 'green'; I.t = 0; }
     if (I.phase === 'green') {
       let go = false;
       if (!sm) go = I.t > 9;
@@ -896,6 +970,8 @@ function stepPeople(dt, time) {
 }
 function stepLamps(dt) {
   const movers = [];
+  if (tom.vis) movers.push(tom.x, tom.z);
+  movers.push(tcar.x, tcar.z);
   for (const c of CARS) movers.push(carX(c), carZ(c));
   movers.push(bus.x, bus.z);
   for (const p of PEOPLE) if (p.walker) movers.push(p.x, p.z);
@@ -903,7 +979,8 @@ function stepLamps(dt) {
   const vis = clamp(G, 0, 1.3);
   for (const L of LAMPS) {
     let tgt = 1;
-    if (wake(L.x, L.z) > .5) {
+    if (L.broken && wake(L.x, L.z) < .5) tgt = Math.random() < .035 ? .8 : 0;
+    else if (wake(L.x, L.z) > .5) {
       tgt = .16;
       for (let k = 0; k < movers.length; k += 2) { const dx = movers[k] - L.x, dz = movers[k + 1] - L.z; if (dx * dx + dz * dz < 11) { tgt = 1; break; } }
     }
@@ -950,118 +1027,6 @@ function stepSmog(dt, time) {
     if (e.t > 1.8) e.s.visible = false;
   }
 }
-
-/* attacks */
-function launchAttack() {
-  if (attackRun) return;
-  attackRun = { blocked: 0, breach: 0, total: 3 };
-  Sound.alarm();
-  for (let k = 0; k < 3; k++) setTimeout(() => {
-    const a = rr(-.35, 1.9), s = new T.Sprite(new T.SpriteMaterial({ map: glowTex, color: 0xff3b2f, transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false }));
-    s.scale.setScalar(1.6); s.position.set(DC.x + Math.cos(a) * 30, rr(7, 13), DC.z + Math.sin(a) * 30); scene.add(s);
-    const trail = Array.from({ length: 5 }, (_, j) => { const t = new T.Sprite(s.material.clone()); t.material.opacity = .5 - j * .09; t.scale.setScalar(1.2 - j * .18); t.position.copy(s.position); scene.add(t); return t; });
-    ATTACKS.push({ s, trail, hist: [] });
-  }, k * 650);
-}
-function burst(pos, color) {
-  const s = new T.Sprite(new T.SpriteMaterial({ map: ringTex, color, transparent: true, depthWrite: false, blending: T.AdditiveBlending, toneMapped: false }));
-  s.position.copy(pos); scene.add(s); BURSTS.push({ s, t: 0 });
-}
-function stepAttacks(dt) {
-  for (let i = ATTACKS.length - 1; i >= 0; i--) {
-    const A = ATTACKS[i], dir = DC.clone().sub(A.s.position), dist = dir.length();
-    A.hist.unshift(A.s.position.clone()); if (A.hist.length > 12) A.hist.pop();
-    A.trail.forEach((t, j) => { const h = A.hist[Math.min(A.hist.length - 1, (j + 1) * 2)]; if (h) t.position.copy(h); });
-    A.s.position.add(dir.normalize().multiplyScalar(13 * dt));
-    let done = null;
-    if (wake(DC.x, DC.z) > .8 && dist < 8.6) done = 'blocked';
-    else if (dist < 2.2) done = 'breach';
-    if (done) {
-      scene.remove(A.s); A.trail.forEach(t => scene.remove(t)); ATTACKS.splice(i, 1);
-      if (done === 'blocked') { burst(A.s.position, accentCol); shieldFlash = 1; attackRun.blocked++; Sound.thud(); }
-      else { burst(A.s.position, new T.Color(0xff3b2f)); dcAlarm = 3.5; attackRun.breach++; Sound.buzz(); }
-      if (attackRun.blocked + attackRun.breach === attackRun.total) {
-        const r = attackRun; attackRun = null;
-        if (r.breach) toast(`${r.breach} of 3 attacks reached the servers. Press S to protect the town, then try again.`, 'bad');
-        else toast('3 of 3 attacks stopped by the firewall. The servers never saw them.', 'good');
-      }
-    }
-  }
-  for (let i = BURSTS.length - 1; i >= 0; i--) {
-    const B = BURSTS[i]; B.t += dt; B.s.scale.setScalar(1 + B.t * 9); B.s.material.opacity = Math.max(0, 1 - B.t / .7);
-    if (B.t > .7) { scene.remove(B.s); BURSTS.splice(i, 1); }
-  }
-}
-
-/* ------------------------------------------------------------------ camera */
-const cam = { t: new T.Vector3(0, 0, 0), az: .72, el: .6, d: 80 };
-const goal = { t: new T.Vector3(0, 0, 0), az: .72, el: .6, d: 80 };
-let lastInput = -1e9, dragging = false, viewX = 0, viewY = 0, W = 1, H = 1;
-const narrowF = () => { const a = W / H; return a < 1 ? Math.pow(1.05 / a, .85) : 1; };
-const overview = () => ({ t: [0, -2, 0], az: 42, el: 38, d: 112 });
-function setGoal(v, instant) {
-  goal.t.set(...v.t); goal.el = v.el * D2R; goal.d = v.d * narrowF();
-  goal.az = cam.az + wrapPi(v.az * D2R - cam.az);
-  if (instant || reduced) { cam.t.copy(goal.t); cam.az = goal.az; cam.el = goal.el; cam.d = goal.d; }
-}
-function updateCamera(dt) {
-  const k = dragging ? 14 : 2.4;
-  cam.t.lerp(goal.t, damp(k, dt)); cam.az = lerp(cam.az, goal.az, damp(k, dt)); cam.el = lerp(cam.el, goal.el, damp(k, dt)); cam.d = lerp(cam.d, goal.d, damp(k, dt));
-  const ce = Math.cos(cam.el);
-  camera.position.set(cam.t.x + cam.d * ce * Math.sin(cam.az), cam.t.y + cam.d * Math.sin(cam.el), cam.t.z + cam.d * ce * Math.cos(cam.az));
-  camera.lookAt(cam.t);
-  const panelOpen = current >= 0, mobile = W <= 720;
-  const tx = panelOpen && !mobile ? Math.min(250, W * .26) : 0, ty = panelOpen && mobile ? Math.min(H * .3, 280) : 0;
-  viewX = lerp(viewX, tx, damp(4, dt)); viewY = lerp(viewY, ty, damp(4, dt));
-  camera.setViewOffset(W, H, viewX, viewY, W, H);
-}
-function resize() {
-  W = innerWidth; H = innerHeight;
-  renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
-  setGoal(current < 0 ? overview() : STOPS[current].view);
-}
-addEventListener('resize', resize);
-
-/* pointer */
-const pointers = new Map(); let downAt = null, pinchD = 0;
-const ray = new T.Raycaster(), ndc = new T.Vector2();
-function pick(x, y) {
-  ndc.set(x / W * 2 - 1, -(y / H) * 2 + 1); ray.setFromCamera(ndc, camera);
-  const hit = ray.intersectObjects(HIT, false)[0]; return hit ? hit.object.userData.stop : -1;
-}
-canvas.addEventListener('pointerdown', e => {
-  canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  downAt = { x: e.clientX, y: e.clientY, b: e.button, shift: e.shiftKey }; dragging = true; canvas.classList.add('drag'); lastInput = performance.now();
-  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinchD = Math.hypot(a.x - b.x, a.y - b.y); }
-});
-canvas.addEventListener('pointermove', e => {
-  if (!pointers.has(e.pointerId)) {
-    const i = pick(e.clientX, e.clientY); canvas.classList.toggle('hot', i >= 0);
-    PINS.forEach((p, k) => p.el.classList.toggle('hover', k === i)); return;
-  }
-  const prev = pointers.get(e.pointerId), dx = e.clientX - prev.x, dy = e.clientY - prev.y;
-  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); lastInput = performance.now();
-  if (pointers.size === 2) {
-    const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
-    if (pinchD) goal.d = clamp(goal.d * pinchD / d, 6, 170); pinchD = d; return;
-  }
-  if (downAt && (downAt.b === 2 || downAt.shift)) {
-    const s = goal.d * .0016, ca = Math.cos(cam.az), sa = Math.sin(cam.az);
-    goal.t.x = clamp(goal.t.x - (dx * ca + dy * sa) * s, -34, 34); goal.t.z = clamp(goal.t.z - (-dx * sa + dy * ca) * s, -34, 34);
-  } else { goal.az -= dx * .0055; goal.el = clamp(goal.el + dy * .004, .1, 1.45); }
-});
-const endPtr = e => {
-  pointers.delete(e.pointerId); if (pointers.size) return;
-  dragging = false; canvas.classList.remove('drag'); pinchD = 0;
-  if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6 && e.type === 'pointerup') {
-    const i = pick(e.clientX, e.clientY); if (i >= 0) goTo(i);
-  }
-  downAt = null;
-};
-canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-canvas.addEventListener('wheel', e => { e.preventDefault(); goal.d = clamp(goal.d * Math.exp(e.deltaY * .0012), 6, 170); lastInput = performance.now(); }, { passive: false });
-
 /* ------------------------------------------------------------------ sound */
 const Sound = {
   ctx: null, on: false, master: null, fx: null,
@@ -1086,7 +1051,7 @@ const Sound = {
   toggle() {
     this.init(); if (!this.ctx) return false; this.on = !this.on; this.ctx.resume?.();
     const t = this.ctx.currentTime;
-    this.master.gain.setTargetAtTime(this.on ? .55 : 0, t, .5); this.fx.gain.setTargetAtTime(this.on ? .9 : 0, t, .05);
+    this.master.gain.setTargetAtTime(this.on ? .3 : 0, t, .5); this.fx.gain.setTargetAtTime(this.on ? .9 : 0, t, .05);
     return this.on;
   },
   tone(f, dur = 1.4, type = 'sine', vol = .12, at = 0, slide) {
@@ -1107,218 +1072,676 @@ const Sound = {
     s.connect(bp).connect(g).connect(this.fx); s.start(t); s.stop(t + 4.6);
     if (up) [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, k) => this.tone(f, 2.2, 'sine', .05, .3 + k * .55));
   },
+  burst(freq, q, dur, vol, at = 0) {
+    if (!this.on) return; const c = this.ctx, t = c.currentTime + at, s = c.createBufferSource(); s.buffer = this.noise;
+    const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+    const g = c.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.001, t + dur);
+    s.connect(bp).connect(g).connect(this.fx); s.start(t, Math.random() * 2); s.stop(t + dur + .05);
+  },
+  ring() { for (let r = 0; r < 3; r++) for (let k = 0; k < 4; k++) this.tone(1480, .06, 'square', .03, r * .75 + k * .1); },
+  honk() { this.tone(392, .34, 'sawtooth', .045); this.tone(494, .34, 'sawtooth', .035); },
+  cough() { this.burst(650, 1.1, .16, .9); this.burst(560, 1.1, .2, .8, .22); },
+  ping() { this.tone(1046.5, .5, 'sine', .07); this.tone(1568, .8, 'sine', .05, .09); },
+  rewind() {
+    if (!this.on) return; const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(900, t); o.frequency.exponentialRampToValueAtTime(120, t + 3.4);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.03, t + .2); g.gain.exponentialRampToValueAtTime(.001, t + 3.6);
+    o.connect(g).connect(this.fx); o.start(t); o.stop(t + 3.7); this.whoosh(false);
+  },
 };
 
-/* ------------------------------------------------------------------ UI */
-const body = document.body, panel = $('#panel'), pbody = $('#p-body');
-$('#total').textContent = STOPS.length;
-const PINS = STOPS.map((s, i) => {
-  const el = document.createElement('button'); el.className = 'pin'; el.type = 'button';
-  el.innerHTML = `<span class="n">${i + 1}</span><span class="lbl">${s.time} · ${s.short}</span>`;
-  el.setAttribute('aria-label', `${s.time}: ${s.title}`);
-  el.addEventListener('click', () => goTo(i)); $('#pins').appendChild(el);
-  return { el, v: new T.Vector3(...s.anchor) };
-});
-function updatePins() {
-  const v = new T.Vector3();
-  PINS.forEach(p => {
-    v.copy(p.v).project(camera);
-    const off = v.z > 1 || Math.abs(v.x) > 1.1 || Math.abs(v.y) > 1.1;
-    p.el.style.visibility = off ? 'hidden' : 'visible';
-    if (!off) p.el.style.transform = `translate(${(v.x * .5 + .5) * W - 14}px, ${(-v.y * .5 + .5) * H - 14}px)`;
-  });
-}
-function refreshSeen() {
-  $('#seen').textContent = seen.size; $('#seenbar').style.width = (seen.size / STOPS.length * 100) + '%';
-  PINS.forEach((p, i) => { p.el.classList.toggle('seen', seen.has(i)); p.el.classList.toggle('on', i === current); });
-}
-const SEG = '<div class="seg" role="group" aria-label="Town"><button data-mode="0">Ordinary</button><button data-mode="1">Smart</button></div>';
-function panelHTML(i) {
-  const s = STOPS[i], A = ACTS[s.act];
-  let h = `<p class="eyebrow"><span class="tm">${s.time}</span> · <b>${A.label}</b> · ${A.q}</p><h2 class="ptitle">${s.title}</h2><p class="key">${s.key}</p>`;
-  if (s.special === 'convince') {
-    return h + `<section class="blk"><h3 class="lab"><i class="dot acc"></i>Five ways to convince people</h3>
-      <ol class="advice">
-        <li><span><b>Show, don’t explain.</b> Let people see the difference, like with this model, then test it in one pilot district.</span></li>
-        <li><span><b>Talk about their day,</b> not about technology: minutes saved, clean air, a safe walk home.</span></li>
-        <li><span><b>Prove it.</b> Measure the pilot and publish the results, good or bad.</span></li>
-        <li><span><b>Protect their data,</b> and say how: count, don’t film, encrypt, delete on time.</span></li>
-        <li><span><b>Let them decide:</b> votes, opt-in services, and a human answer for everyone.</span></li>
-      </ol></section>
-      <section class="blk proof"><h3 class="lab">What a smart city is, for me</h3>
-      <p class="def">Not a city full of sensors. A city that listens to its people, and protects what it hears.</p><p class="def-by">Yanis</p></section>
-      <section class="blk">${SEG}</section>`;
+/* ================================================================== Tom: moves and poses */
+const hAt = (x, z) => {
+  if (Math.abs(x - HX) < 1.3 && Math.abs(z - HZ) < 1.2) return .33;
+  if (x > -13.6 && x < -4.2 && z > -12 && z < -4) return .7;
+  const onB = v => BLOCK.some(b => Math.abs(v - b) <= 6);
+  return onB(x) && onB(z) ? .25 : .04;
+};
+const carY = (x, z) => (x > 18.2 && x < 29.8 && z > 2.2 && z < 13.8) ? .27 : hAt(x, z) > .2 ? .25 : .04;
+
+const POSE0 = { hy: .38, upX: 0, upZ: 0, hdX: 0, hdY: 0, lT: 0, rT: 0, lK: 0, rK: 0, lA: 0, rA: 0, lAZ: -.08, rAZ: .08, lE: -.15, rE: -.15 };
+const tom = { x: HX, z: HZ, y: .3, yaw: 0, yawT: 0, act: 'idle', path: null, speed: 1.3, walkAct: null, then: null, walkPh: 0,
+  vis: true, scale: 1, scaleT: 1, fixedY: null, prop: null, glide: null, P: Object.assign({}, POSE0) };
+
+function tomTarget(t) {
+  const P = Object.assign({}, POSE0), a = tom.path ? (tom.walkAct || (tom.speed > 2 ? 'run' : 'walk')) : tom.act;
+  P.upX = Math.sin(t * 2.2) * .02;
+  const SIT = () => { P.hy = .26; P.lT = P.rT = -1.5; P.lK = P.rK = 1.45; P.lA = P.rA = -.35; P.lE = P.rE = -.55; };
+  const BED = () => { P.hy = .07; P.lT = P.rT = -1.57; P.lK = P.rK = 0; P.lA = P.rA = -.55; P.lE = P.rE = -.45; };
+  if (a === 'walk' || a === 'run' || a === 'scared') {
+    const run = a === 'run', amp = run ? .85 : .55, s = Math.sin(tom.walkPh), c = Math.cos(tom.walkPh);
+    P.lT = -amp * s; P.rT = amp * s;
+    P.lK = Math.max(0, c) * (run ? 1.3 : .8); P.rK = Math.max(0, -c) * (run ? 1.3 : .8);
+    P.lA = amp * .8 * s; P.rA = -amp * .8 * s; P.lE = P.rE = run ? -1.2 : -.35;
+    P.hy = .37 + Math.abs(c) * (run ? .04 : .02);
+    P.upX = run ? .28 : .06;
+    if (a === 'scared') { P.upX = .2; P.hdY = Math.sin(t * 2.6) * .7; P.lE = P.rE = -1.4; P.lAZ = .35; P.rAZ = -.35; P.lA = P.rA = -.5; }
   }
-  h += `<section class="blk"><div class="vshead"><h3 class="lab">Same moment, two towns</h3>${SEG}</div>
-    <div class="vs"><div class="old"><h4 class="lab"><i class="dot bad"></i>Today</h4><p>${s.today}</p></div>
-    <div class="new"><h4 class="lab"><i class="dot acc"></i>Smart town</h4>${s.smart.startsWith('<') ? s.smart : `<p>${s.smart}</p>`}</div></div></section>`;
-  h += `<section class="blk foryou"><h3 class="lab"><i class="dot good"></i>What it changes for you</h3><p>${s.forYou}</p></section>`;
-  if (s.special === 'json') h += `<section class="blk"><h3 class="lab">Everything this box sends, live</h3>
-    <pre class="json">{
-  <span class="k">"sensor"</span>: <span class="s">"crossroads-01"</span>,
-  <span class="k">"time"</span>: <span class="s">"<span id="j-time">23:00:07</span>"</span>,
-  <span class="k">"cars_waiting"</span>: <span class="n" id="j-cars">0</span>,
-  <span class="k">"green_for"</span>: <span class="s">"<span id="j-green">north-south</span>"</span>
-}</pre><p class="cap">No face. No number plate. No name. Nothing that points to a person.</p></section>`;
-  if (s.special === 'attack') h += `<section class="blk"><h3 class="lab">Try it in both towns</h3><div class="attack"><button class="cta" data-attack>Simulate an attack</button><kbd>A</kbd></div></section>`;
-  if (s.proof) h += `<section class="blk proof"><h3 class="lab">${s.proofLab || 'Real example'}</h3><p>${s.proof}</p>${s.src ? `<p class="src">${s.src}</p>` : ''}</section>`;
-  return h;
+  else if (a === 'sit') SIT();
+  else if (a === 'eat') { SIT(); const k = sstep(.1, .7, Math.sin(t * 2.1)); P.rA = -.45 - 1.15 * k; P.rE = -.6 - 1.25 * k; P.rAZ = -.12 * k; P.hdX = .12 - .2 * k; }
+  else if (a === 'cough') { SIT(); const c = t % 2.2, j = c < .8 ? Math.abs(Math.sin(c * 15)) : 0; P.upX = .2 + .3 * j; P.hdX = .2 + .25 * j; P.rA = -1.75; P.rE = -1.95; P.rAZ = -.25; }
+  else if (a === 'lie') { P.hy = .07; P.lT = P.rT = -1.57; P.upX = -1.57 + Math.sin(t * 1.4) * .015; P.lA = P.rA = .05; P.lE = P.rE = 0; P.hdY = .25; }
+  else if (a === 'situp') BED();
+  else if (a === 'shiver') { BED(); P.upZ = Math.sin(t * 46) * .05; P.lAZ = .55; P.rAZ = -.55; P.lA = P.rA = -1.05; P.lE = P.rE = -1.6; P.hdX = .18; }
+  else if (a === 'stretch') { BED(); const w = Math.sin(t * 3) * .15; P.lA = P.rA = -2.95 + w; P.lAZ = -.3; P.rAZ = .3; P.lE = P.rE = -.15; P.upX = -.12; P.hdX = -.3; }
+  else if (a === 'facepalm') { P.rA = -2.25; P.rE = -2.15; P.rAZ = -.3; P.hdX = .4; P.upX = .14; P.lA = .1; }
+  else if (a === 'cheer') { const w = Math.sin(t * 9); P.lA = P.rA = -2.85 + .2 * w; P.lAZ = -.35 - .1 * w; P.rAZ = .35 + .1 * w; P.lE = P.rE = -.2; P.hy = .38 + Math.abs(w) * .03; }
+  else if (a === 'lookup') { P.hdX = -.6; P.upX = -.05; }
+  else if (a === 'thumb') { P.rA = -1.45; P.rE = -.55; P.rAZ = -.1; P.hdX = -.1; }
+  if (tom.prop === 'phone') { P.rA = -1.05; P.rE = -1.25; P.rAZ = -.22; P.hdX += .42; }
+  return P;
 }
-function syncSeg() { for (const b of document.querySelectorAll('.seg button')) b.setAttribute('aria-pressed', String((b.dataset.mode === '1') === smart)); }
-pbody.addEventListener('click', e => {
-  const m = e.target.closest('[data-mode]'); if (m) setSmart(m.dataset.mode === '1');
-  if (e.target.closest('[data-attack]')) launchAttack();
-});
-function setClock(time, tod) {
-  $('#clk').textContent = time; $('#clk-l').textContent = TOD[tod].label;
-  const [hh, mm] = time.split(':').map(Number); drawClock(hh, mm);
+function applyPose() {
+  const R = TOM, P = tom.P;
+  R.hips.position.y = P.hy; R.upper.rotation.x = P.upX; R.upper.rotation.z = P.upZ; R.head.rotation.x = P.hdX; R.head.rotation.y = P.hdY;
+  R.legs[0].thigh.rotation.x = P.lT; R.legs[1].thigh.rotation.x = P.rT; R.legs[0].knee.rotation.x = P.lK; R.legs[1].knee.rotation.x = P.rK;
+  R.arms[0].sh.rotation.x = P.lA; R.arms[1].sh.rotation.x = P.rA; R.arms[0].sh.rotation.z = P.lAZ; R.arms[1].sh.rotation.z = P.rAZ;
+  R.arms[0].el.rotation.x = P.lE; R.arms[1].el.rotation.x = P.rE;
 }
-function goTo(i) {
-  if (i < 0 || i >= STOPS.length) return;
-  if (!$('#letter').classList.contains('gone')) enter();
-  current = i; const s = STOPS[i];
-  pbody.innerHTML = panelHTML(i); pbody.scrollTop = 0; syncSeg();
-  $('#p-step').textContent = `Moment ${i + 1} of ${STOPS.length}`; $('#p-pos').textContent = `${i + 1} / ${STOPS.length}`;
-  $('#p-next').textContent = i === STOPS.length - 1 ? 'Back to the town ↺' : 'Next →';
-  panel.dataset.open = 'true'; body.classList.add('panel-open');
-  setGoal(s.view); setTod(s.tod); setClock(s.time, s.tod);
-  if (!seen.has(i)) { seen.add(i); store.set('city-day-seen', [...seen]); Sound.chime(); } else Sound.tone(660, .6, 'sine', .04);
-  refreshSeen(); updateNotes();
-  if (s.special === 'convince' && !smart) setTimeout(() => current === i && setSmart(true), 1100);
-  $('#book').hidden = true;
+function tomPlace(x, z, yawDeg, act = 'idle', y = null) {
+  Object.assign(tom, { x, z, yaw: yawDeg * D2R, yawT: yawDeg * D2R, act, path: null, then: null, fixedY: y, vis: true, scale: 1, scaleT: 1, glide: null });
+  tom.y = y ?? hAt(x, z); Object.assign(tom.P, tomTarget(0)); applyPose();
 }
-function closePanel() {
-  current = -1; panel.dataset.open = 'false'; body.classList.remove('panel-open'); setGoal(overview()); refreshSeen(); updateNotes();
+function tomAppear(x, z, yawDeg) { tomPlace(x, z, yawDeg); tom.scale = .01; }
+function tomHide() { tom.vis = false; tom.path = null; tom.then = null; }
+function tomWalk(pts, speed = 1.3, then = null, act = null) { tom.path = pts.map(p => p.slice()); tom.speed = speed; tom.then = then; tom.walkAct = act; tom.fixedY = null; tom.glide = null; }
+function tomDo(act, yawDeg) { tom.act = act; if (yawDeg != null) tom.yawT = yawDeg * D2R; }
+function ensureTom(x, z, yawDeg, act = 'idle') { if (!tom.vis || Math.hypot(tom.x - x, tom.z - z) > .6) tomPlace(x, z, yawDeg, act); else tomDo(act, yawDeg); }
+function flop() { tom.glide = [HX - .5, HZ + .75]; tom.fixedY = .63; tom.yawT = Math.PI / 2; tom.act = 'lie'; }
+function stepTom(dt, time) {
+  if (tom.path) {
+    const [px, pz] = tom.path[0], dx = px - tom.x, dz = pz - tom.z, d = Math.hypot(dx, dz), step = tom.speed * dt;
+    if (d <= step) {
+      tom.x = px; tom.z = pz; tom.path.shift();
+      if (!tom.path.length) { tom.path = null; const f = tom.then; tom.then = null; if (f) f(); }
+    } else { tom.x += dx / d * step; tom.z += dz / d * step; tom.yawT = Math.atan2(dx, dz); }
+    tom.walkPh += dt * Math.PI * 2 * tom.speed / (tom.speed > 2 ? .95 : .62);
+  }
+  if (tom.glide) { const k = damp(7, dt); tom.x = lerp(tom.x, tom.glide[0], k); tom.z = lerp(tom.z, tom.glide[1], k); }
+  tom.yaw += wrapPi(tom.yawT - tom.yaw) * damp(10, dt);
+  tom.y = lerp(tom.y, tom.fixedY != null ? tom.fixedY : hAt(tom.x, tom.z), damp(14, dt));
+  const tgt = tomTarget(time), k = damp(tom.path ? 22 : 8, dt);
+  for (const key in tgt) tom.P[key] = lerp(tom.P[key], tgt[key], k);
+  applyPose();
+  tom.scale = lerp(tom.scale, tom.scaleT, damp(9, dt));
+  const R = TOM.root; R.visible = tom.vis && tom.scale > .03;
+  R.position.set(tom.x, tom.y, tom.z); R.rotation.y = tom.yaw; R.scale.setScalar(Math.max(.001, tom.scale));
+  TOM.phone.visible = tom.prop === 'phone'; TOM.food.visible = tom.prop === 'food';
 }
-const next = () => current < 0 ? goTo(0) : current < STOPS.length - 1 ? goTo(current + 1) : closePanel();
-const prev = () => current <= 0 ? closePanel() : goTo(current - 1);
-$('#p-close').onclick = closePanel; $('#p-next').onclick = next; $('#p-prev').onclick = prev;
 
-function setSmart(v) {
-  if (v === smart) { syncSeg(); return; }
-  smart = v;
-  if (v && waveR < 1) WAVE.uC.value.set(cam.t.x, cam.t.z);
-  const sw = $('#sw'); sw.setAttribute('aria-checked', String(v)); sw.classList.remove('nudge');
-  $('#mode-t').textContent = v ? 'Smart town' : 'Ordinary town';
-  $('#mode-d').textContent = v ? 'Sensors on, data protected, everything published' : 'Grey, polluted, stuck in traffic. Press S to wake it up.';
+/* ------------------------------------------------------------------ cars that follow a drawn path */
+const curveOf = (pts, closed = false) => new T.CatmullRomCurve3(pts.map(p => new T.Vector3(p[0], 0, p[1])), closed, 'centripetal');
+function follower(obj) { return { obj, curve: null, clen: 1, u: 0, spd: 0, spdT: 0, rev: false, then: null, loop: null, inLoop: false, onU: null, flow: false, moving: false, x: obj.position.x, z: obj.position.z, yaw: obj.rotation.y }; }
+function fGo(f, pts, speed, then = null, opt = {}) {
+  f.curve = curveOf((opt.fromHere ? [[f.x, f.z]] : []).concat(pts)); f.clen = f.curve.getLength();
+  Object.assign(f, { u: 0, spdT: speed, rev: !!opt.rev, then, loop: opt.loop || null, inLoop: false, onU: null, flow: !!opt.flow, moving: true });
+  if (!opt.keepSpeed) f.spd = 0;
+}
+const _tg = new T.Vector3(), _pt = new T.Vector3();
+function fStep(f, dt) {
+  if (!f.moving) return;
+  const slow = f.loop || f.inLoop || f.flow ? 1e9 : Math.max(.3, (1 - f.u) * f.clen * 1.4);
+  const tgt = Math.min(f.spdT, slow);
+  f.spd = f.spd < tgt ? Math.min(tgt, f.spd + 3.2 * dt) : lerp(f.spd, tgt, damp(6, dt));
+  const pu = f.u; f.u += f.spd * dt / f.clen;
+  if (f.inLoop && f.onU && pu < f.onU.u && f.u >= f.onU.u && f.onU.when()) { const h = f.onU; f.onU = null; h.fn(); return; }
+  if (f.u >= 1) {
+    if (f.loop) { f.curve = f.loop; f.clen = f.curve.getLength(); f.u = 0; f.loop = null; f.inLoop = true; }
+    else if (f.inLoop) f.u -= 1;
+    else { f.u = 1; place(f, dt); f.moving = false; f.spd = 0; const t = f.then; f.then = null; if (t) t(); return; }
+  }
+  place(f, dt);
+}
+function place(f, dt) {
+  f.curve.getPointAt(Math.min(1, f.u), _pt); f.curve.getTangentAt(Math.min(1, f.u), _tg);
+  f.x = _pt.x; f.z = _pt.z;
+  const yt = Math.atan2(_tg.x, _tg.z) + (f.rev ? Math.PI : 0);
+  f.yaw += wrapPi(yt - f.yaw) * damp(14, dt);
+}
+
+/* Tom's car: parked, on a drawn path, or driving in the traffic model */
+const tcar = Object.assign(follower(tomCarG), { mode: 'park', axis: 'x', road: 16, dir: 1, key: 'x|16|1', s: 0, v: 0, len: 1.9, pass: 0, tom: true, driver: false, y: .25, stopAt: null, onStop: null, green: false });
+const leaver = follower(LOT.cars[0]);
+function leaveSim() { const L = lanes.get(tcar.key), i = L.indexOf(tcar); if (i >= 0) L.splice(i, 1); }
+function carPark(x, z, yawDeg) { leaveSim(); Object.assign(tcar, { mode: 'park', moving: false, x, z, yaw: yawDeg * D2R, spd: 0, v: 0 }); tcar.y = carY(x, z); }
+function carGo(pts, speed, then, opt = {}) {
+  const v = tcar.mode === 'sim' ? tcar.v : tcar.spd; leaveSim(); tcar.mode = 'path';
+  fGo(tcar, pts, speed, then, opt); if (opt.keepSpeed) tcar.spd = v;
+}
+function carJoin(s, v = 0) {
+  leaveSim(); Object.assign(tcar, { mode: 'sim', moving: false, s, v });
+  const L = lanes.get(tcar.key);
+  for (const c of L) { const d = ((c.s - s) % 72 + 108) % 72 - 36; if (Math.abs(d) < 3) c.s = s - 3.2 - Math.random() * 2; }
+  L.push(tcar);
+}
+function carLoop(u) { tcar.mode = 'path'; leaveSim(); Object.assign(tcar, { curve: LOOP, clen: LOOP.getLength(), u, inLoop: true, loop: null, moving: true, spd: 3, spdT: 3.4, rev: false, then: null, flow: false }); place(tcar, 1); tcar.yaw = Math.atan2(_tg.x, _tg.z); }
+function ensureSim(s) { if (!(tcar.mode === 'sim' && Math.abs(tcar.s - s) < 4)) carJoin(s, 0); tcar.driver = true; tomHide(); }
+function tomIntoCar() { tom.scaleT = 0; tom.path = null; setTimeout(() => { if (tom.scaleT === 0) tom.vis = false; }, 400); tcar.driver = true; }
+const atEntrance = () => tcar.mode !== 'sim' && Math.hypot(tcar.x - 19.6, tcar.z - 14.2) < 1.2;
+function stepTomCar(dt) {
+  if (tcar.mode === 'path') fStep(tcar, dt);
+  if (tcar.mode === 'path' && !tcar.moving) tcar.mode = 'park';
+  if (tcar.mode === 'sim') {
+    tcar.x = carX(tcar); tcar.z = carZ(tcar); tcar.yaw = Math.PI / 2;
+    if (tcar.green) {  // smart lights: the crossroads ahead sees Tom and gives him green
+      for (const I of INTERS) if (I.z === 16 && I.force === 'x' && tcar.x > I.x + 3) I.force = null;
+      const ni = nextInter(tcar); if (ni && ni.d < 12) ni.I.force = 'x';
+    }
+    if (tcar.stopAt != null && tcar.s >= tcar.stopAt) { const f = tcar.onStop; tcar.stopAt = null; tcar.onStop = null; if (f) f(); }
+  }
+  tcar.y = lerp(tcar.y, carY(tcar.x, tcar.z), damp(10, dt));
+  tomCarG.position.set(tcar.x, tcar.y, tcar.z); tomCarG.rotation.y = tcar.yaw;
+  tomCarG.userData.head.visible = tcar.driver;
+  tomCarG.userData.lights.emissiveIntensity = G > .5 ? 2.6 : .3;
+  fStep(leaver, dt);
+  if (leaver.moving) { leaver.obj.position.set(leaver.x, carY(leaver.x, leaver.z), leaver.z); leaver.obj.rotation.y = leaver.yaw; }
+}
+function lotSet(smartLot) {
+  LOT.cars.forEach((g, i) => { g.visible = !(smartLot && i === 1); g.position.set(LOT.spots[i], .27, LOT.z); g.rotation.y = 0; });
+  Object.assign(leaver, { moving: false, x: LOT.spots[0], z: LOT.z, yaw: 0 });
+}
+const force = (x, z, ax) => { IMAP.get(x + ',' + z).force = ax; };
+
+/* paths */
+const DRIVE_OUT = [[-26, 19.6], [-25.8, 18.4], [-25, 17.3], [-23.6, 17]];
+const LOT_ENTRY = [[16.6, 17], [18.6, 16.8], [19.5, 15.6], [19.6, 13.6], [19.7, 11], [20.8, 10.05], [23.6, 10], [25.6, 10]];
+const LOOP = curveOf([[25.6, 10], [28, 10], [28.6, 9.3], [28.6, 4.1], [28, 3.4], [25.6, 3.4], [25, 4.1], [25, 9.3]], true);
+const U_WEST = (() => { let best = 0, bd = 1e9; for (let i = 0; i <= 400; i++) { LOOP.getPointAt(i / 400, _pt); const d = Math.hypot(_pt.x - 25, _pt.z - 7.2); if (d < bd) { bd = d; best = i / 400; } } return best; })();
+const PARK_A = [[25, 9], [24.5, 9.95], [23.2, 10.25], [21.9, 10.45], [21.35, 11.2], [21.2, 12.3]];
+const PARK_B = [[19.6, 12.6], [19.9, 10.8], [20.9, 10.15], [21.9, 10.3], [22.45, 11.1], [22.6, 12.3]];
+const TURN_IN = [[19.3, 16.5], [19.6, 15.3], [19.6, 14.2]];
+
+/* ------------------------------------------------------------------ speech bubbles, phone notifications */
+const bubLayer = $('#bubbles'), BUBS = [];
+const _hp = new T.Vector3(), _up = new T.Vector3(), _cp = new T.Vector3(), _bp = new T.Vector3();
+function bub(html, at, o = {}) {
+  const el = document.createElement('div'); el.className = 'bub ' + (o.cls || 'emo');
+  el.innerHTML = `<div class="b">${html}</div>`; bubLayer.appendChild(el);
+  const b = { el, at, t: 0, dur: o.dur || 0, dx: o.dx || 0, dy: o.dy || 0 }; BUBS.push(b); placeBub(b); return b;
+}
+function killBub(b) { const i = BUBS.indexOf(b); if (i >= 0) BUBS.splice(i, 1); b.el.classList.add('out'); setTimeout(() => b.el.remove(), 320); }
+function clearBubs() { for (const b of [...BUBS]) killBub(b); }
+function placeBub(b) {
+  _bp.copy(typeof b.at === 'function' ? b.at() : b.at).project(camera);
+  const off = _bp.z > 1 || Math.abs(_bp.x) > 1.3 || Math.abs(_bp.y) > 1.3;
+  b.el.style.visibility = off ? 'hidden' : 'visible';
+  const bw = b.el.firstChild.offsetWidth, bh = b.el.firstChild.offsetHeight;   // keep bubbles on screen, below the top bar
+  const x = clamp((_bp.x * .5 + .5) * W + b.dx, bw / 2 + 12, W - bw / 2 - 12), y = clamp((-_bp.y * .5 + .5) * H + b.dy, bh + 78, H - 150);
+  b.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
+}
+function stepBubs(dt) { for (const b of [...BUBS]) { b.t += dt; if (b.dur && b.t > b.dur) killBub(b); else placeBub(b); } }
+const note = (icon, app, text, at, o = {}) => bub(`<i class="ic">${icon}</i><span><small>${app}</small>${text}</span>`, at, Object.assign({ cls: 'note' }, o));
+const atTom = (dy = .46) => () => TOM.head.getWorldPosition(_hp).add(_up.set(0, dy, 0));
+const atCar = () => _cp.set(tcar.x, tcar.y + 1.7, tcar.z);
+const ALARM_AT = new T.Vector3(HX - 1.12, 1.05, HZ + .1);
+const SENSOR_AT = new T.Vector3(SENSOR_LAMP.px, 2.85, SENSOR_LAMP.pz);
+const BROKEN_AT = new T.Vector3(BROKEN_LAMP.x, 4, BROKEN_LAMP.z + .3);
+const HALL_SIGN_AT = new T.Vector3(-6.7, 2.15, -8.95);
+
+/* ------------------------------------------------------------------ the story, beat by beat */
+const PARTS = { intro: ['One day, two towns', ''], p1: ['Part 1', 'An ordinary town'], rw: ['Rewind', 'Same day, again'], p2: ['Part 2', 'A smart town'], end: ['Conclusion', 'How to convince people'] };
+const V = (t, az, el, d, off) => ({ t, az, el, d, off });
+const OVER = V([0, -2, 0], 42, 38, 108);
+const BEDV = V([HX - .55, .7, HZ + .5], 176, 30, 6.2);
+const LUNCH = V([-4.1, .95, 8.2], 62, 16, 6.6);
+const tomOrCar = () => tom.vis ? _cp.set(tom.x, tom.y + .5, tom.z) : _cp.set(tcar.x, tcar.y + .5, tcar.z);
+const tomPos = () => _cp.set(tom.x, tom.y + .55, tom.z);
+const carPos = () => _cp.set(tcar.x, tcar.y + .5, tcar.z);
+
+let beatT = 0, cues = [];
+const cue = (t, fn) => cues.push({ t, fn, done: false });
+const later = (d, fn) => cue(beatT + d, fn);
+let binsMode = null, alarmShake = 0;
+const houseLight = v => { house.target = v; };
+function bedScene(act = 'lie') { house.open = true; houseLight(0); tomPlace(HX - .5, HZ + .75, 90, act, .63); carPark(-26, 21, 180); }
+const sleep = () => bub('<b>z</b><b>z</b><b>z</b>', atTom(.2), { cls: 'zzz' });
+const ring = () => { Sound.ring(); alarmShake = 2.4; bub('RING!', ALARM_AT, { cls: 'say', dur: 2.4 }); };
+const honk = () => { Sound.honk(); bub('BEEP!', atCar, { cls: 'say', dur: 1.3, dx: 46 }); };
+function leaveHome() {
+  house.open = false; houseLight(0); carPark(-26, 21, 180); tcar.driver = false; tomPlace(HX, 18.95, 180);
+  cue(.4, () => tomWalk([[-27.1, 18.9], [-26.35, 19.6]], 1.4, () => {
+    tomIntoCar(); later(.5, () => carGo(DRIVE_OUT, 2.8, () => carJoin(-23.6, tcar.spd), { fromHere: true, flow: true }));
+  }));
+}
+function turnIn() { carGo(TURN_IN, 2.4, () => bub('🅿️', atCar, { dur: 2 }), { fromHere: true, keepSpeed: true }); }
+const JSON_HTML = `<pre><span class="k">"sensor"</span>: <span class="s">"lamp-17"</span>,
+<span class="k">"people"</span>: <span class="n">1</span>,
+<span class="k">"time"</span>: <span class="s">"22:35"</span></pre><p>No camera. No face. No name.</p>`;
+
+const B = [
+  { part: 'intro', clock: '06:30', tod: 'dawn', smart: false, over: 'title', view: OVER, drift: .035, place: '',
+    cap: '', fr: '', setup() { bedScene(); } },
+  { part: 'intro', clock: '06:30', tod: 'dawn', smart: false, view: V([-4, 0, 2], 30, 32, 84), drift: .03, place: 'Our town',
+    cap: 'This is our town. A normal town, like many others: traffic jams, pollution, and a town hall that closes at five.',
+    fr: 'Voici notre ville. Une ville normale, comme beaucoup d’autres : des bouchons, de la pollution, et une mairie qui ferme à 17 h.',
+    setup() { bedScene(); } },
+
+  /* ---------------- Part 1: an ordinary day */
+  { part: 'p1', clock: '06:45', tod: 'dawn', smart: false, view: BEDV, place: 'Tom’s bedroom',
+    cap: 'And this is Tom. It’s 6:45 and he is still asleep. Today, we are going to follow him all day long.',
+    fr: 'Et voici Tom. Il est 6 h 45 et il dort encore. Aujourd’hui, on va le suivre toute la journée.',
+    setup() { bedScene(); cue(.5, sleep); } },
+  { part: 'p1', clock: '06:45', tod: 'dawn', smart: false, view: BEDV, place: 'Tom’s bedroom',
+    cap: 'His alarm rings. Brrr… the house is cold: the old heating only starts at 7 o’clock, every day.',
+    fr: 'Son réveil sonne. Brrr… la maison est froide : le vieux chauffage ne s’allume qu’à 7 h, tous les jours.',
+    setup() {
+      bedScene(); cue(.2, ring); cue(1.5, () => tomDo('situp')); cue(2.3, () => houseLight(1));
+      cue(2.7, () => { tomDo('shiver'); bub('🥶', atTom()); }); cue(3.4, () => bub('16 °C', THERMO, { cls: 'sign bad' }));
+    } },
+  { part: 'p1', clock: '07:30', tod: 'morning', smart: false, view: V(null, -150, 26, 12), follow: tomOrCar, place: 'Tom’s street',
+    cap: '7:30. Tom takes his car to go to work. And… red light.',
+    fr: '7 h 30. Tom prend sa voiture pour aller travailler. Et… feu rouge.',
+    setup() { leaveHome(); force(-16, 16, 'z'); },
+    run(t, dt, st) { if (!st.mad && tcar.mode === 'sim' && tcar.v < .15 && t > 4) { st.mad = 1; bub('😤', atCar); honk(); } } },
+  { part: 'p1', clock: '07:40', tod: 'morning', smart: false, view: V(null, 100, 20, 9, [1.4, 0, 0]), follow: carPos, place: 'First crossroads',
+    cap: 'These lights work on a timer: they don’t see the traffic. So Tom waits… with his engine running.',
+    fr: 'Ces feux marchent avec une minuterie : ils ne voient pas la circulation. Alors Tom attend… moteur allumé.',
+    setup() { ensureSim(-19.4); force(-16, 16, 'z'); cue(.5, honk); cue(2.4, () => bub('😤', atCar)); cue(4.2, honk); } },
+  { part: 'p1', clock: '07:55', tod: 'morning', smart: false, lost: 20, view: V(null, -95, 32, 15, [3, 0, 0]), follow: carPos, place: 'Main road',
+    cap: 'And it’s the same at every crossroads. In total, Tom waits 20 minutes at red lights.',
+    fr: 'Et c’est pareil à chaque carrefour. Au total, Tom attend 20 minutes aux feux rouges.',
+    setup() { ensureSim(-19.4); force(-16, 16, 'z'); force(0, 16, 'z'); cue(.6, () => force(-16, 16, 'x')); },
+    run(t, dt, st) {
+      if (t > 1 && tcar.x > -12.5) force(-16, 16, null);
+      if (!st.sad && t > 3 && tcar.mode === 'sim' && tcar.v < .15) { st.sad = 1; bub('😩', atCar); honk(); }
+    } },
+  { part: 'p1', clock: '08:20', tod: 'morning', smart: false, lost: 32, view: V([24.4, .5, 8.2], 18, 50, 25), place: 'The office car park',
+    cap: '8:20. The car park is full. Tom drives around… and around… and around again.',
+    fr: '8 h 20. Le parking est plein. Tom tourne… et tourne… et tourne encore.',
+    setup() { lotSet(false); tomHide(); tcar.driver = true; carGo(LOT_ENTRY, 3.4, null, { loop: LOOP }); cue(2.5, () => bub('❓', atCar)); } },
+  { part: 'p1', clock: '08:32', tod: 'morning', smart: false, view: V(null, 22, 42, 15), follow: tomOrCar, place: 'The office car park',
+    cap: 'Finally, a free space! But Tom is half an hour late, and his day has only just started.',
+    fr: 'Enfin une place ! Mais Tom a une demi-heure de retard, et sa journée ne fait que commencer.',
+    setup() {
+      lotSet(false); if (!(tcar.mode === 'path' && tcar.inLoop)) carLoop(.12); tcar.driver = true; tomHide();
+      cue(.5, () => fGo(leaver, [[21.25, 11.5], [21.7, 10.8], [22.3, 10.4]], 1.3, () =>
+        fGo(leaver, [[21.2, 10.35], [20.1, 10.7], [19.6, 12], [19.6, 14.2], [19.1, 15.1], [17.6, 15.05], [13.5, 15]], 2.8, () => { leaver.obj.visible = false; }, { fromHere: true }),
+        { rev: true, fromHere: true }));
+      tcar.onU = { u: U_WEST, when: () => beatT > 4.8, fn: () => {
+        bub('😮‍💨', atCar, { dur: 2 });
+        carGo(PARK_A, 2.2, () => {
+          tcar.driver = false; tomAppear(20.5, 11.9, 180);
+          later(.3, () => { bub('LATE!', atTom(), { cls: 'say', dur: 3 }); tomWalk([[20.5, 10.4], [21, 8.1]], 2.6, () => { tom.scaleT = 0; }); });
+        }, { fromHere: true, keepSpeed: true });
+      } };
+    } },
+  { part: 'p1', clock: '12:30', tod: 'noon', smart: false, view: LUNCH, place: 'Lunch break',
+    cap: '12:30. Lunch break. But look at the bins: they are overflowing. The truck only comes on Thursdays, full or not.',
+    fr: '12 h 30. Pause déjeuner. Mais regardez les poubelles : elles débordent. Le camion ne passe que le jeudi, pleines ou pas.',
+    setup() { tomPlace(-4.48, 8.2, 90, 'eat', .25); tom.prop = 'food'; binsMode = 'full'; cue(2, () => bub('🤢', atTom())); } },
+  { part: 'p1', clock: '12:40', tod: 'noon', smart: false, view: V([-4.3, .95, 8.2], 78, 13, 5), place: 'Lunch break',
+    cap: 'And the air is heavy: all these cars waiting with their engines on. Tom coughs.',
+    fr: 'Et l’air est lourd : toutes ces voitures qui attendent moteur allumé. Tom tousse.',
+    setup() { tomPlace(-4.48, 8.2, 90, 'cough', .25); binsMode = 'full'; cue(.4, () => bub('😷', atTom())); },
+    run(t, dt, st) { const k = Math.floor(t / 2.2); if (k !== st.k) { st.k = k; bub('cough!', atTom(.25), { cls: 'say', dur: 1, dx: 58 }); Sound.cough(); } } },
+  { part: 'p1', clock: '17:30', tod: 'sunset', smart: false, lost: 62, view: V([-5.6, 1.5, -8], 66, 17, 13), place: 'The town hall',
+    cap: '5:30 pm. Tom needs a document from the town hall. Closed! It’s open from 9 to 5… exactly when he is at work.',
+    fr: '17 h 30. Tom a besoin d’un papier à la mairie. Fermé ! Elle est ouverte de 9 h à 17 h… pile quand il travaille.',
+    setup() {
+      tomPlace(-2.6, -4.6, -150);
+      cue(.3, () => tomWalk([[-3.6, -6.6], [-4.6, -7.9], [-6.35, -8]], 1.3, () => {
+        tomDo('idle', -90);
+        later(.5, () => bub('CLOSED', HALL_SIGN_AT, { cls: 'sign bad' }));
+        later(1.4, () => { tomDo('facepalm', 90); bub('😤', atTom()); });
+      }));
+    } },
+  { part: 'p1', clock: '22:30', tod: 'night', smart: false, view: V(null, -100, 15, 12), follow: tomPos, place: 'Tom’s street, at night',
+    cap: '10:30 pm. Tom walks home after dinner at a friend’s. The big avenue is lit all night… for nobody.',
+    fr: '22 h 30. Tom rentre à pied après un dîner chez un ami. La grande avenue est éclairée toute la nuit… pour personne.',
+    setup() { carPark(-26, 21, 180); tcar.driver = false; house.open = false; tomPlace(-12, 18.95, -90); cue(.3, () => tomWalk([[-21.4, 18.95]], 1.25)); } },
+  { part: 'p1', clock: '22:35', tod: 'night', smart: false, view: V(null, -150, 22, 9.5), follow: tomPos, place: 'Tom’s street, at night',
+    cap: 'But the lamp in his street has been broken for a month. Nobody has reported it.',
+    fr: 'Mais le lampadaire de sa rue est cassé depuis un mois. Personne ne l’a signalé.',
+    setup() {
+      carPark(-26, 21, 180); tcar.driver = false; house.open = false; ensureTom(-21.4, 18.95, -90);
+      cue(.2, () => { bub('😨', atTom(), { dur: 4 }); tomWalk([[-25.6, 18.95], [-27.6, 18.95], [HX, 19.05]], 1.05, () => { tom.scaleT = 0; houseLight(1); }, 'scared'); });
+    } },
+  { part: 'p1', clock: '23:00', tod: 'night', smart: false, view: BEDV, place: 'Tom’s bedroom',
+    cap: '11 pm. Tom goes to bed, tired and stressed. Today, he lost more than an hour.',
+    fr: '23 h. Tom va se coucher, fatigué et stressé. Aujourd’hui, il a perdu plus d’une heure.',
+    setup() {
+      house.open = true; houseLight(1); carPark(-26, 21, 180); tomPlace(HX - .45, HZ + .05, 0);
+      cue(.9, flop); cue(1.2, () => bub('😩', atTom(), { dur: 2.4 })); cue(3.3, () => { houseLight(0); sleep(); });
+    } },
+
+  /* ---------------- the switch */
+  { part: 'rw', clock: '23:00', tod: 'night', smart: false, view: V([-12, 0, 10], 35, 36, 72), drift: .05, place: '',
+    cap: 'Now, let’s rewind. Same town, same Tom, same day…',
+    fr: 'Maintenant, on rembobine. Même ville, même Tom, même journée…',
+    setup() { bedScene(); body.classList.add('rewinding'); $('#rew').hidden = false; Sound.rewind(); cue(.3, sleep); },
+    run(t) {
+      const m = lerp(23 * 60, 6 * 60 + 45, ease(clamp(t / 3.6, 0, 1))), hh = Math.floor(m / 60);
+      setClock(`${String(hh).padStart(2, '0')}:${String(Math.floor(m % 60)).padStart(2, '0')}`);
+      setTod(hh >= 21 ? 'night' : hh >= 17 ? 'sunset' : hh >= 14 ? 'afternoon' : hh >= 11 ? 'noon' : hh >= 8 ? 'morning' : 'dawn');
+      if (t > 3.8) { body.classList.remove('rewinding'); $('#rew').hidden = true; }
+    } },
+  { part: 'p2', clock: '06:45', tod: 'dawn', smart: 'wave', view: OVER, drift: .03, place: 'Our town',
+    cap: '…but this time, the town is smart. Look: it wakes up, street by street.',
+    fr: '…mais cette fois, la ville est intelligente. Regardez : elle se réveille, rue après rue.',
+    setup() { bedScene(); cue(.6, () => setSmart(true, true)); } },
+
+  /* ---------------- Part 2: a smart day */
+  { part: 'p2', clock: '06:45', tod: 'dawn', smart: true, view: BEDV, place: 'Tom’s bedroom',
+    cap: '6:45. Tom is still asleep. But the house knows when he wakes up: the heating started a few minutes ago.',
+    fr: '6 h 45. Tom dort encore. Mais la maison sait quand il se réveille : le chauffage s’est allumé il y a quelques minutes.',
+    setup() { bedScene(); cue(.5, sleep); cue(1.5, () => bub('20 °C', THERMO, { cls: 'sign good' })); } },
+  { part: 'p2', clock: '06:45', tod: 'dawn', smart: true, view: BEDV, place: 'Tom’s bedroom',
+    cap: 'His alarm rings. It’s warm, and his phone already knows the traffic: 18 minutes to work.',
+    fr: 'Son réveil sonne. Il fait bon, et son téléphone connaît déjà la circulation : 18 minutes jusqu’au travail.',
+    setup() {
+      bedScene(); cue(.2, ring); cue(1.5, () => tomDo('situp')); cue(2.2, () => houseLight(1));
+      cue(2.5, () => { tomDo('stretch'); bub('😊', atTom(), { dur: 2.2 }); });
+      cue(4.5, () => { tomDo('situp'); tom.prop = 'phone'; note('🚦', 'Traffic · now', 'Roads are clear. Leave at 7:30, 18 min to work.', atTom(.6)); Sound.ping(); });
+    } },
+  { part: 'p2', clock: '07:30', tod: 'morning', smart: true, view: V(null, -95, 32, 15, [3, 0, 0]), follow: tomOrCar, place: 'Main road',
+    cap: '7:30. Same car, same road. But now the lights have sensors: they see Tom coming and turn green.',
+    fr: '7 h 30. Même voiture, même route. Mais maintenant les feux ont des capteurs : ils voient Tom arriver et passent au vert.',
+    setup() { leaveHome(); tcar.green = true; tcar.stopAt = 18.4; tcar.onStop = turnIn; },
+    run(t, dt, st) { if (!st.cool && tcar.mode === 'sim' && tcar.x > -14) { st.cool = 1; bub('😎', atCar, { dur: 3 }); } } },
+  { part: 'p2', clock: '07:40', tod: 'morning', smart: true, lost: 12, view: V([0, .5, 16], 38, 30, 21), place: 'Smart crossroads',
+    cap: 'In Pittsburgh, in the USA, lights like these cut the waiting at red lights by 40%. For Tom, it’s 12 minutes instead of 20.',
+    fr: 'À Pittsburgh, aux États-Unis, ce genre de feux a réduit de 40 % l’attente aux feux rouges. Pour Tom, ça fait 12 minutes au lieu de 20.',
+    src: 'Surtrac, Carnegie Mellon University: figures reported by the team for the first pilot.',
+    setup() {
+      tomHide(); tcar.driver = true; tcar.green = true;
+      if (tcar.mode === 'sim') { tcar.stopAt = 18.4; tcar.onStop = turnIn; } else if (tcar.mode === 'park' && !atEntrance()) carPark(19.6, 14.2, 180);
+    } },
+  { part: 'p2', clock: '08:00', tod: 'morning', smart: true, view: V(null, 22, 42, 16), follow: tomOrCar, place: 'The office car park',
+    cap: '8:00. Every parking space has a sensor. The app shows Tom a free space, and he drives straight to it. He’s on time!',
+    fr: '8 h. Chaque place de parking a un capteur. L’appli montre une place libre à Tom, et il y va directement. Il est à l’heure !',
+    setup() {
+      lotSet(true); if (!atEntrance()) carPark(19.6, 14.2, 180); tcar.driver = true; tomHide();
+      cue(.3, () => { note('🅿️', 'Parking', 'Free space: row A, spot 2. Straight ahead.', atCar); Sound.ping(); });
+      cue(1.6, () => carGo(PARK_B, 2.4, () => {
+        tcar.driver = false; tomAppear(23.3, 11.9, 180);
+        later(.3, () => { bub('🎵', atTom(), { dur: 2.5 }); tomWalk([[23.3, 10.4], [21.5, 9], [21, 8.1]], 1.3, () => { tom.scaleT = 0; }); });
+      }, { fromHere: true }));
+    } },
+  { part: 'p2', clock: '12:30', tod: 'noon', smart: true, view: LUNCH, place: 'Lunch break',
+    cap: '12:30. The bins tell the truck when they are full, so it came this morning. And with fewer cars waiting, the air is cleaner.',
+    fr: '12 h 30. Les poubelles préviennent le camion quand elles sont pleines : il est passé ce matin. Et avec moins de voitures à l’arrêt, l’air est plus propre.',
+    setup() {
+      tomPlace(-4.48, 8.2, 90, 'eat', .25); tom.prop = 'food'; binsMode = 'empty';
+      cue(1.2, () => { note('🌿', 'Air quality', 'Good today. Enjoy your lunch outside!', atTom(.9), { dx: 60 }); Sound.ping(); });
+      cue(4.4, () => bub('😋', atTom(), { dur: 2.5, dx: -70 }));
+    } },
+  { part: 'p2', clock: '17:30', tod: 'sunset', smart: true, lost: 14, view: V([-2.4, 1.5, -10.2], 80, 12, 9.5), place: 'The town hall',
+    cap: '5:30 pm. His document? He asked for it online, in two minutes. And on this screen, everyone can see the town’s data, live.',
+    fr: '17 h 30. Son papier ? Il l’a demandé en ligne, en deux minutes. Et sur cet écran, tout le monde peut voir les données de la ville, en direct.',
+    setup() {
+      tomPlace(-1.9, -4.6, 180);
+      cue(.3, () => tomWalk([[-1.9, -9.6]], 1.2, () => tomDo('idle', -90)));
+      cue(1.6, () => { tom.prop = 'phone'; note('🏛️', 'Town hall', 'Your certificate is ready ✓ Asked online in 2 min.', atTom(.6)); Sound.ping(); });
+      cue(5.4, () => { tom.prop = null; tomDo('thumb'); });
+    } },
+  { part: 'p2', clock: '22:30', tod: 'night', smart: true, view: V(null, -100, 15, 12), follow: tomPos, place: 'Tom’s street, at night',
+    cap: '10:30 pm. In empty streets, the lights are dimmed… and they light up when Tom walks by.',
+    fr: '22 h 30. Dans les rues vides, les lampadaires sont baissés… et ils s’allument quand Tom passe.',
+    setup() { carPark(-26, 21, 180); tcar.driver = false; house.open = false; tomPlace(-12, 18.95, -90); cue(.3, () => tomWalk([[-19.8, 18.95]], 1.25)); } },
+  { part: 'p2', clock: '22:35', tod: 'night', smart: true, view: V([-20.8, 1.7, 18.7], -165, 9, 7.2), place: 'Under the smart lamp',
+    cap: 'But is the town watching him? No. This lamp has a sensor: it counts people, it doesn’t film them.',
+    fr: 'Mais est-ce que la ville le surveille ? Non. Ce lampadaire a un capteur : il compte les gens, il ne les filme pas.',
+    setup() {
+      carPark(-26, 21, 180); house.open = false; ensureTom(-19.8, 18.95, -90);
+      cue(.2, () => tomWalk([[-20.6, 18.95]], 1.1, () => { tomDo('lookup', -140); bub('❓', atTom(), { dur: 2 }); }));
+      cue(1.6, () => bub(JSON_HTML, SENSOR_AT, { cls: 'json' })); cue(4.8, () => tomDo('thumb'));
+    } },
+  { part: 'p2', clock: '22:36', tod: 'night', smart: true, view: V([-20.8, 1.9, 18.7], -160, 12, 8.4), place: 'Under the smart lamp',
+    cap: 'And the data is protected: encrypted, kept in Europe, deleted after 30 days. That’s the law in Europe: the GDPR.',
+    fr: 'Et les données sont protégées : chiffrées, gardées en Europe, effacées au bout de 30 jours. C’est la loi en Europe : le RGPD.',
+    setup() {
+      carPark(-26, 21, 180); house.open = false; ensureTom(-20.6, 18.95, -140, 'thumb');
+      cue(.4, () => bub('🔒 Encrypted', SENSOR_AT, { cls: 'sign good', dy: -88 }));
+      cue(1.2, () => bub('🇪🇺 Kept in Europe', SENSOR_AT, { cls: 'sign good', dy: -44 }));
+      cue(2, () => bub('🗓️ Deleted after 30 days', SENSOR_AT, { cls: 'sign good' }));
+    } },
+  { part: 'p2', clock: '22:38', tod: 'night', smart: true, view: V(null, -150, 20, 10), follow: tomPos, place: 'Tom’s street, at night',
+    cap: 'And the broken lamp? It reported itself, and it was repaired the next day. In Dijon, the goal is to use 65% less energy for street lights.',
+    fr: 'Et le lampadaire cassé ? Il a signalé sa panne tout seul, et il a été réparé le lendemain. À Dijon, l’objectif est de consommer 65 % d’énergie en moins pour l’éclairage.',
+    src: 'Dijon Métropole, OnDijon contract (2017). The 65% is a target, not a measured result.',
+    setup() {
+      carPark(-26, 21, 180); house.open = false; ensureTom(-20.6, 18.95, -90);
+      cue(.3, () => tomWalk([[-25.6, 18.95], [-27.6, 18.95], [HX, 19.05]], 1.2, () => { tom.scaleT = 0; houseLight(1); }));
+      cue(1.8, () => bub('🔧 Reported itself · repaired', BROKEN_AT, { cls: 'sign good' }));
+    } },
+  { part: 'p2', clock: '23:00', tod: 'night', smart: true, view: BEDV, place: 'Tom’s bedroom',
+    cap: '11 pm. Tom goes to bed, relaxed. Today, he lost only 14 minutes.',
+    fr: '23 h. Tom va se coucher, détendu. Aujourd’hui, il n’a perdu que 14 minutes.',
+    setup() {
+      house.open = true; houseLight(1); carPark(-26, 21, 180); tomPlace(HX - .45, HZ + .05, 0);
+      cue(.9, flop); cue(1.2, () => bub('😌', atTom(), { dur: 2.4 })); cue(3.3, () => { houseLight(0); sleep(); });
+    } },
+
+  /* ---------------- conclusion */
+  { part: 'end', clock: '23:00', tod: 'night', smart: true, over: 'board', view: OVER, drift: .03, place: 'Tom’s day',
+    cap: 'So, how do we convince people? We don’t talk to them about sensors or data. We show them their own day.',
+    fr: 'Alors, comment convaincre les gens ? On ne leur parle pas de capteurs ni de données. On leur montre leur propre journée.',
+    setup() { bedScene(); } },
+  { part: 'end', clock: '23:00', tod: 'sunset', smart: true, over: 'final', view: V([0, -2, 0], -32, 30, 96), drift: .025, place: '',
+    cap: 'Thank you for listening. Do you have any questions?',
+    fr: 'Merci de nous avoir écoutés. Avez-vous des questions ?',
+    setup() { bedScene(); } },
+];
+{ let cur = 0, part = ''; for (const b of B) { if (b.part !== part) { part = b.part; cur = 0; } if (b.lost != null) cur = b.lost; b.lostV = cur; } }
+
+/* ------------------------------------------------------------------ smart mode */
+
+function setSmart(v, animate) {
+  if (v === smart && !animate) return;
+  smart = v; WAVE.uC.value.set(0, 0);
+  if (!animate) waveR = v ? 130 : 0; else if (v) { waveR = 0; Sound.whoosh(true); }
   body.classList.toggle('is-smart', v);
-  Sound.whoosh(v); syncSeg();
-}
-$('#sw').onclick = () => setSmart(!smart);
-
-let toastTimer;
-function toast(msg, kind = 'good') {
-  document.querySelector('.toast')?.remove(); clearTimeout(toastTimer);
-  const t = document.createElement('div'); t.className = 'toast glass'; t.setAttribute('role', 'status');
-  t.innerHTML = `<i class="dot ${kind}"></i><span></span>`; t.lastChild.textContent = msg; body.appendChild(t);
-  toastTimer = setTimeout(() => t.remove(), 4200);
 }
 
-/* notes */
-const notesEl = $('#notes');
-function updateNotes() {
-  $('#n-where').textContent = current < 0 ? 'Introduction' : `${STOPS[current].time} · ${STOPS[current].title}`;
-  $('#n-text').textContent = current < 0 ? INTRO.notes : STOPS[current].notes;
+/* ------------------------------------------------------------------ HUD */
+const capLine = $('#s-line'), capFr = $('#s-fr'), capSrc = $('#s-src'), capMeta = $('#s-meta');
+let fr = !!store.get('city-fr'), auto = false, beatI = -1, st = {};
+let lostShown = 0;
+const fmtLost = m => m >= 60 ? `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')}` : `${Math.round(m)} min`;
+function setClock(txt) {
+  $('#clk').textContent = txt; drawAlarm(txt);
+  const [hh, mm] = txt.split(':').map(Number); drawClock(hh, mm);
 }
-function toggleNotes() { notesEl.hidden = !notesEl.hidden; $('#b-notes').setAttribute('aria-pressed', String(!notesEl.hidden)); updateNotes(); }
-$('#b-notes').onclick = toggleNotes;
-
-/* notebook */
-function buildBook() {
-  const wrap = $('#book-acts'); wrap.innerHTML = '';
-  ACTS.forEach((A, a) => {
-    const d = document.createElement('div'); d.className = 'act';
-    d.innerHTML = `<h3><b>${A.label}</b> · ${A.q}</h3><ul></ul>`;
-    STOPS.forEach((s, i) => {
-      if (s.act !== a) return;
-      const li = document.createElement('li');
-      li.innerHTML = `<button type="button"><span class="num">${s.time}</span><span class="tt">${s.title}<small>${s.forYou || 'Five ways to convince people, and my own definition.'}</small></span><span class="ck">${seen.has(i) ? 'seen' : ''}</span></button>`;
-      li.firstChild.onclick = () => goTo(i); d.lastChild.appendChild(li);
-    });
-    wrap.appendChild(d);
-  });
+function wordsHTML(s) { return s.split(' ').map((w, i) => `<span style="--i:${i}">${w}</span>`).join(' '); }
+const prog = $('#prog');
+B.forEach((b, i) => { const d = document.createElement('i'); d.dataset.part = b.part; d.title = `${i + 1}`; prog.appendChild(d); });
+function syncHUD(b) {
+  const [a, c] = PARTS[b.part];
+  $('#chip-a').textContent = a; $('#chip-b').textContent = c; $('#chip').dataset.part = b.part;
+  capMeta.textContent = b.place ? `${b.clock} · ${b.place}` : '';
+  capLine.innerHTML = wordsHTML(b.cap); capFr.textContent = b.fr; capFr.hidden = !fr || !b.fr; capSrc.textContent = b.src || ''; capSrc.hidden = !b.src;
+  $('#subs').classList.toggle('empty', !b.cap);
+  $('#subs').classList.remove('in'); void $('#subs').offsetWidth; $('#subs').classList.add('in');
+  [...prog.children].forEach((d, i) => { d.classList.toggle('on', i === beatI); d.classList.toggle('done', i < beatI); });
+  for (const id of ['title', 'board', 'final']) $('#' + id).hidden = b.over !== id;
+  $('#day').hidden = !(b.part === 'p1' || b.part === 'p2');
+  $('#b-fr').setAttribute('aria-pressed', String(fr));
 }
-function openBook() { buildBook(); $('#book').hidden = false; $('#book-close').focus(); }
-$('#b-book').onclick = openBook; $('#book-close').onclick = () => { $('#book').hidden = true; };
-$('#book').addEventListener('click', e => { if (e.target.id === 'book') $('#book').hidden = true; });
 
-$('#b-tour').onclick = () => goTo(current < 0 ? 0 : current);
-$('#b-sound').onclick = () => { const on = Sound.toggle(); $('#b-sound').setAttribute('aria-pressed', String(!!on)); };
-$('#b-full').onclick = () => { if (document.fullscreenElement) document.exitFullscreen?.(); else root.requestFullscreen?.().catch(() => {}); };
-
-function enter() { $('#letter').classList.add('gone'); lastInput = performance.now() - 3000; }
-$('#enter').onclick = enter;
-
-addEventListener('keydown', e => {
-  if (e.metaKey || e.ctrlKey || e.altKey) return;
-  const letterOpen = !$('#letter').classList.contains('gone');
-  if (letterOpen) { if (e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); enter(); } return; }
-  const k = e.key;
-  if (k === 'ArrowRight' || k === 'PageDown') { e.preventDefault(); next(); }
-  else if (k === 'ArrowLeft' || k === 'PageUp') { e.preventDefault(); prev(); }
-  else if (k === 'Escape') { if (!$('#book').hidden) $('#book').hidden = true; else closePanel(); }
-  else if (k === 's' || k === 'S' || k === 'b' || k === 'B') setSmart(!smart);
-  else if (k === 'n' || k === 'N') toggleNotes();
-  else if (k === 'c' || k === 'C') { if ($('#book').hidden) openBook(); else $('#book').hidden = true; }
-  else if (k === 'a' || k === 'A') launchAttack();
-  else if (k === 'm' || k === 'M') $('#b-sound').click();
-  else if (k === 'f' || k === 'F') $('#b-full').click();
-  else if (k === 'Home') closePanel();
-});
-
-/* sparklines + metrics */
-function spark(id, data, max, color) {
-  const c = document.getElementById(id); if (!c || !c.offsetWidth) return;
-  const r = Math.min(2, devicePixelRatio), w = c.offsetWidth, h = c.offsetHeight;
-  if (c.width !== w * r) { c.width = w * r; c.height = h * r; }
-  const g = c.getContext('2d'); g.setTransform(r, 0, 0, r, 0, 0); g.clearRect(0, 0, w, h);
-  if (data.length < 2) return;
-  const X = i => i / (60 - 1) * w, Y = v => h - 2 - clamp(v / max, 0, 1) * (h - 5);
-  g.beginPath(); data.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
-  g.strokeStyle = color; g.lineWidth = 1.5; g.lineJoin = 'round'; g.stroke();
-  g.lineTo(X(data.length - 1), h); g.lineTo(0, h); g.closePath(); g.globalAlpha = .14; g.fillStyle = color; g.fill(); g.globalAlpha = 1;
-  g.beginPath(); g.arc(X(data.length - 1), Y(data[data.length - 1]), 2.4, 0, 7); g.fillStyle = color; g.fill();
+/* ------------------------------------------------------------------ playing a beat */
+function go(i) {
+  i = clamp(i, 0, B.length - 1); const b = B[i]; beatI = i;
+  clearBubs(); cues = []; beatT = 0; st = {};
+  for (const I of INTERS) I.force = null;
+  tom.path = null; tom.then = null; tom.prop = null; tom.glide = null; tom.walkAct = null;
+  tcar.onU = null; tcar.stopAt = null; tcar.onStop = null; tcar.green = false;
+  leaver.moving = false; binsMode = null; alarmShake = 0;
+  body.classList.remove('rewinding'); $('#rew').hidden = true;
+  if (b.smart === 'wave') setSmart(false); else setSmart(!!b.smart);
+  lotSet(!!b.smart);
+  setTod(b.tod); setClock(b.clock);
+  if (b.part === 'p2' && B[i - 1] && B[i - 1].part !== 'p2') lostShown = 0;
+  b.setup(st);
+  setView(b.view);
+  syncHUD(b);
+  try { history.replaceState(null, '', '#' + (i + 1)); } catch (e) {}
 }
-let lastLight = 100;
+const next = () => go(beatI + 1), prev = () => go(beatI - 1);
+function beatDur(b) { return Math.max(6, b.cap.split(' ').length * .42 + 3); }
+function stepStory(dt) {
+  const b = B[beatI]; beatT += dt;
+  for (const c of cues) if (!c.done && beatT >= c.t) { c.done = true; c.fn(); }
+  if (b.run) b.run(beatT, dt, st);
+  if (b.follow) goal.t.copy(b.follow()).add(followOff);
+  if (b.drift && !dragging && performance.now() - lastInput > 2500) goal.az += b.drift * dt;
+  lostShown = lerp(lostShown, b.lostV, damp(1.6, dt));
+  if (Math.abs(lostShown - b.lostV) < .4) lostShown = b.lostV;
+  $('#lost').textContent = fmtLost(lostShown);
+  $('#day').classList.toggle('bad', b.part === 'p1' && lostShown > .5);
+  if (binsMode) for (const bn of BINS) bn.fill = binsMode === 'full' ? 1 : .12;
+  if (auto && beatT > beatDur(b) && beatI < B.length - 1) next();
+}
+
+/* ------------------------------------------------------------------ signs that change with the town */
+function spotFree(i) {
+  const x = LOT.spots[i], g = LOT.cars[i];
+  if (g.visible && Math.hypot(g.position.x - x, g.position.z - LOT.z) < .8) return false;
+  return Math.hypot(tcar.x - x, tcar.z - LOT.z) > .9;
+}
+function drawSigns() {
+  const hs = wake(-6.8, -8) > .5 ? 's' : 'o';
+  if (hallSign.key !== hs) {
+    hallSign.key = hs; const { g, c } = hallSign, W2 = c.width, H2 = c.height;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    if (hs === 'o') {
+      g.fillStyle = '#f3ede2'; g.fillRect(0, 0, W2, H2); g.fillStyle = '#c8372d'; g.fillRect(0, 0, W2, 62);
+      g.fillStyle = '#fff'; g.font = '700 42px "Bricolage Grotesque", sans-serif'; g.fillText('CLOSED', W2 / 2, 33);
+      g.fillStyle = '#2a2018'; g.font = '600 27px "Bricolage Grotesque", sans-serif'; g.fillText('Open 9:00 – 17:00', W2 / 2, 98);
+      g.fillStyle = '#7c7266'; g.font = '22px "Bricolage Grotesque", sans-serif'; g.fillText('Monday to Friday', W2 / 2, 136);
+    } else {
+      g.fillStyle = '#120c0a'; g.fillRect(0, 0, W2, H2);
+      g.fillStyle = css('--accent') || '#f472b6'; g.font = '700 40px "Bricolage Grotesque", sans-serif'; g.fillText('OPEN 24/7', W2 / 2, 62);
+      g.fillStyle = '#f1ece2'; g.font = '23px "Bricolage Grotesque", sans-serif'; g.fillText('online · town hall app', W2 / 2, 114);
+    }
+    hallSign.tex.needsUpdate = true;
+  }
+  const free = LOT.spots.filter((_, i) => spotFree(i)).length, sm = wake(18.75, 14.8) > .5;
+  const ls = (sm ? 's' : 'o') + free;
+  if (lotSign.key !== ls) {
+    lotSign.key = ls; const { g, c } = lotSign, W2 = c.width, H2 = c.height;
+    g.fillStyle = '#1d3f8f'; g.fillRect(0, 0, W2, H2); g.strokeStyle = '#fff'; g.lineWidth = 6; g.strokeRect(5, 5, W2 - 10, H2 - 10);
+    g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#fff'; g.font = '700 96px "Bricolage Grotesque", sans-serif'; g.fillText('P', 62, 84);
+    const ok = sm && free > 0;
+    g.fillStyle = ok ? '#3ddc84' : '#ff4a3a'; g.fillRect(118, 34, 122, 54);
+    g.fillStyle = '#0f0d0c'; g.font = '700 32px "Bricolage Grotesque", sans-serif'; g.fillText(ok ? `${free} FREE` : 'FULL', 179, 62);
+    g.fillStyle = '#fff'; g.font = '22px "Bricolage Grotesque", sans-serif'; g.fillText(ok ? '→ row A, spot 2' : sm ? 'see the app' : '', 179, 118);
+    lotSign.tex.needsUpdate = true;
+  }
+}
 function tickMetrics() {
   const waiting = CARS.filter(c => c.v < .4).length;
   idleEMA = lerp(idleEMA, waiting, .12);
   metrics = { wait: waiting, light: lastLight, bins: BINS.filter(b => b.fill >= 1).length, air: Math.round(10 + idleEMA * 1.8 + (1 - smartK) * 22) };
-  $('#m-wait').textContent = metrics.wait; $('#m-light').textContent = metrics.light; $('#m-bins').textContent = metrics.bins; $('#m-air').textContent = metrics.air;
-  for (const k in hist) { hist[k].push(metrics[k]); if (hist[k].length > 60) hist[k].shift(); }
-  const c = smartK > .5 ? css('--accent') : css('--muted');
-  spark('sp-wait', hist.wait, 24, c); spark('sp-light', hist.light, 100, c); spark('sp-bins', hist.bins, 6, c); spark('sp-air', hist.air, 80, c);
-  const jc = document.getElementById('j-cars');
-  if (jc) {
-    const I = IMAP.get('0,0');
-    jc.textContent = CARS.filter(c => c.v < .4 && Math.abs(carX(c)) < 16 && Math.abs(carZ(c)) < 16).length;
-    $('#j-time').textContent = new Date().toTimeString().slice(0, 8);
-    $('#j-green').textContent = I.green === 'x' ? 'east-west' : I.green === 'z' ? 'north-south' : 'changing';
-  }
-  drawHall(); drawBus();
+  drawHall(); drawBus(); drawSigns();
 }
 
-/* ------------------------------------------------------------------ loop */
-const clock = new T.Clock(); let mt = 0, heartT = 0;
-function frame() {
-  const dt = Math.min(.05, clock.getDelta()), time = clock.elapsedTime;
+/* ------------------------------------------------------------------ camera */
+const cam = { t: new T.Vector3(0, -2, 0), az: 42 * D2R, el: 38 * D2R, d: 108 };
+const goal = { t: new T.Vector3(0, -2, 0), az: cam.az, el: cam.el, d: cam.d };
+const followOff = new T.Vector3();
+let lastInput = -1e9, dragging = false, W = 1, H = 1, curView = OVER;
+const narrowF = () => { const a = W / H; return a < 1 ? Math.pow(1.05 / a, .85) : 1; };
+function setView(v, instant) {
+  curView = v;
+  if (v.t) goal.t.set(...v.t);
+  followOff.set(...(v.off || [0, 0, 0]));
+  goal.el = v.el * D2R; goal.d = v.d * narrowF(); goal.az = cam.az + wrapPi(v.az * D2R - cam.az);
+  if (instant || reduced) {
+    if (B[beatI] && B[beatI].follow) goal.t.copy(B[beatI].follow()).add(followOff);
+    cam.t.copy(goal.t); cam.az = goal.az; cam.el = goal.el; cam.d = goal.d;
+  }
+}
+function updateCamera(dt) {
+  const k = dragging ? 14 : 2.2;
+  cam.t.lerp(goal.t, damp(k, dt)); cam.az = lerp(cam.az, goal.az, damp(k, dt)); cam.el = lerp(cam.el, goal.el, damp(k, dt)); cam.d = lerp(cam.d, goal.d, damp(k, dt));
+  const ce = Math.cos(cam.el);
+  camera.position.set(cam.t.x + cam.d * ce * Math.sin(cam.az), cam.t.y + cam.d * Math.sin(cam.el), cam.t.z + cam.d * ce * Math.cos(cam.az));
+  camera.lookAt(cam.t);
+  camera.setViewOffset(W, H, 0, Math.min(110, H * .1), W, H);   // keep the action above the subtitles
+}
+function resize() {
+  W = innerWidth; H = innerHeight;
+  renderer.setSize(W, H, false); camera.aspect = W / H; camera.updateProjectionMatrix();
+  setView(curView);
+}
+addEventListener('resize', resize);
 
-  // the wave: grows out from where you look when the town wakes up, shrinks back when it sleeps
-  if (smart) waveR = reduced ? 120 : Math.min(120, waveR + dt * (9 + waveR * .12));
-  else waveR = reduced ? 0 : Math.max(0, waveR - dt * 30);
+/* ------------------------------------------------------------------ input */
+const pointers = new Map(); let downAt = null, pinchD = 0;
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId); pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  downAt = { x: e.clientX, y: e.clientY, b: e.button }; dragging = true; canvas.classList.add('drag'); lastInput = performance.now();
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinchD = Math.hypot(a.x - b.x, a.y - b.y); }
+});
+canvas.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  const prv = pointers.get(e.pointerId), dx = e.clientX - prv.x, dy = e.clientY - prv.y;
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); lastInput = performance.now();
+  if (pointers.size === 2) { const [a, b] = [...pointers.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (pinchD) goal.d = clamp(goal.d * pinchD / d, 3, 170); pinchD = d; return; }
+  goal.az -= dx * .0055; goal.el = clamp(goal.el + dy * .004, .05, 1.45);
+});
+const endPtr = e => {
+  pointers.delete(e.pointerId); if (pointers.size) return;
+  dragging = false; canvas.classList.remove('drag'); pinchD = 0;
+  if (downAt && e.type === 'pointerup' && downAt.b === 0 && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 6) next();
+  downAt = null;
+};
+canvas.addEventListener('pointerup', endPtr); canvas.addEventListener('pointercancel', endPtr);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', e => { e.preventDefault(); goal.d = clamp(goal.d * Math.exp(e.deltaY * .0012), 3, 170); lastInput = performance.now(); }, { passive: false });
+
+function toggleFr() { fr = !fr; store.set('city-fr', fr); syncHUD(B[beatI]); }
+function syncSound() { $('#b-sound').setAttribute('aria-pressed', String(!!Sound.on)); }
+function toggleSound() { Sound.toggle(); store.set('city-sound', !!Sound.on); syncSound(); }
+function toggleAuto() { auto = !auto; $('#b-auto').setAttribute('aria-pressed', String(auto)); if (auto) beatT = Math.min(beatT, 1); }
+const btn = (id, fn) => $(id).addEventListener('click', e => { fn(); e.currentTarget.blur(); });
+btn('#b-fr', toggleFr); btn('#b-sound', toggleSound); btn('#b-auto', toggleAuto); btn('#b-prev', prev); btn('#b-next', next);
+btn('#b-full', () => { if (document.fullscreenElement) document.exitFullscreen?.(); else root.requestFullscreen?.().catch(() => {}); });
+btn('#start', next);
+{ // sound starts with the first key or click (browsers only allow audio after a gesture)
+  const first = () => { removeEventListener('keydown', first, true); removeEventListener('pointerdown', first, true); if (store.get('city-sound') !== false && !Sound.on) { Sound.toggle(); syncSound(); } };
+  addEventListener('keydown', first, true); addEventListener('pointerdown', first, true);
+}
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key;
+  if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'ArrowDown') { e.preventDefault(); next(); }
+  else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'ArrowUp') { e.preventDefault(); prev(); }
+  else if (k === 'Home') go(0);
+  else if (k === 'End') go(B.length - 1);
+  else if (k === 'r' || k === 'R') go(beatI);
+  else if (k === 't' || k === 'T') toggleFr();
+  else if (k === 'm' || k === 'M') toggleSound();
+  else if (k === 'p' || k === 'P') toggleAuto();
+  else if (k === 'f' || k === 'F') $('#b-full').click();
+});
+
+/* ------------------------------------------------------------------ loop */
+const clock = new T.Clock(); let mt = 0, heartT = 0, exT = 0;
+function tomExhaust(dt) {
+  exT += dt;
+  if (exT < .13) return; exT = 0;
+  if (smart || tcar.mode !== 'sim' || tcar.v > .5) return;
+  const e = EXHAUST.find(e => e.t > 1.8); if (!e) return;
+  e.t = 0; e.s.visible = true; e.s.position.set(tcar.x - 1.05, .42, tcar.z + .25);
+}
+let simT = 0;
+function tick(dt) {
+  simT += dt; const time = simT;
+  if (smart) waveR = reduced ? 130 : Math.min(130, waveR + dt * (9 + waveR * .12));
+  else waveR = Math.max(0, waveR - dt * 30);
   WAVE.uR.value = waveR;
-  WAVE.uEdgeOn.value = lerp(WAVE.uEdgeOn.value, smart && waveR < 100 ? 1 : 0, damp(4, dt));
+  WAVE.uEdgeOn.value = lerp(WAVE.uEdgeOn.value, smart && waveR < 110 ? 1 : 0, damp(4, dt));
   smartK = clamp(waveR / 70, 0, 1);
   const sk = ease(smartK);
 
-  if (current < 0 && !dragging && performance.now() - lastInput > 4000 && !reduced) goal.az += .035 * dt;
-
+  stepStory(dt);
   stepTod(dt);
-  stepLights(dt); stepCars(dt); stepBus(dt); stepPeople(dt, time); stepBins(dt); stepAttacks(dt); stepSmog(dt, time);
+  stepLights(dt); stepCars(dt); stepBus(dt); stepPeople(dt, time); stepBins(dt); stepSmog(dt, time);
+  stepTomCar(dt); stepTom(dt, time); tomExhaust(dt);
   renderCars();
   lastLight = stepLamps(dt);
 
-  // fog: thick grey smog in the ordinary town, clear air in the smart one
   scene.fog.color.copy(TS.fog).lerp(SMOG_TINT, (1 - sk) * (G > 1 ? .25 : .55));
   scene.fog.near = cam.d * lerp(.45, .95, sk); scene.fog.far = cam.d * lerp(1.7, 2.9, sk) + 20;
   paintSky();
@@ -1326,17 +1749,13 @@ function frame() {
   for (const I of INTERS) I.ringMat.opacity = wake(I.x, I.z) * (.25 + .15 * Math.sin(time * 3));
   for (const A of ARCS) {
     const w = wake(A.src.x, A.src.z);
-    const vis = w * (A.group === 'health' ? (current === S_HOSP ? 2 : 1) : (current === S_SERVER ? 2 : 1));
-    A.line.material.opacity = .16 * vis;
-    for (const p of A.packets) { p.t = (p.t + dt * A.speed) % 1; A.curve.getPoint(p.t, p.s.position); p.s.material.opacity = Math.min(1, .85 * vis * wake(p.s.position.x, p.s.position.z)); }
+    A.line.material.opacity = .16 * w;
+    for (const p of A.packets) { p.t = (p.t + dt * A.speed) % 1; A.curve.getPoint(p.t, p.s.position); p.s.material.opacity = Math.min(1, .85 * w * wake(p.s.position.x, p.s.position.z)); }
   }
   const wDC = wake(DC.x, DC.z);
   shield.scale.setScalar(Math.max(.001, ease(clamp(wDC * 1.1, 0, 1))));
-  shield.rotation.y += dt * .08; shieldFlash = Math.max(0, shieldFlash - dt * 1.8);
-  shieldWireMat.opacity = .22 + shieldFlash * .7; shieldSkinMat.opacity = .05 + shieldFlash * .2;
-  dcAlarm = Math.max(0, dcAlarm - dt);
-  if (dcAlarm > 0) ledMat.emissive.setRGB(Math.sin(time * 20) > 0 ? 1 : .2, .02, .02);
-  else ledMat.emissive.copy(SMOG_TINT).multiplyScalar(.4).lerp(accentCol, wDC).multiplyScalar(.5 + wDC * .8);
+  shield.rotation.y += dt * .08; shieldWireMat.opacity = .22; shieldSkinMat.opacity = .05;
+  ledMat.emissive.copy(SMOG_TINT).multiplyScalar(.4).lerp(accentCol, wDC).multiplyScalar(.5 + wDC * .8);
   mastLight.material.opacity = (Math.sin(time * 3) > .6 ? 1 : .15) * (G * .7 + .3);
   for (const f of fans) f.rotation.y += dt * 8;
   rotor.rotation.z += dt * (.7 + wake(-29.3, 29.3) * 1.6);
@@ -1346,6 +1765,7 @@ function frame() {
   const wSe = wake(2.7, 2.7);
   sensorRings.forEach((s, k) => { const t = (time * .7 + k * .5) % 1; s.scale.setScalar(.3 + t * 3); s.material.opacity = wSe * (1 - t) * .8; });
   sensorLed.material.opacity = .3 + wSe * .7 * (.6 + .4 * Math.sin(time * 6));
+  sensorLed2.material.opacity = wake(SENSOR_LAMP.x, SENSOR_LAMP.z) * (.55 + .45 * Math.sin(time * 6));
   jet.material.opacity = (.35 + .1 * Math.sin(time * 4)) * (G * .6 + .2);
   busMesh.userData.beacon.material.opacity = wake(bus.x, bus.z) * (.6 + .4 * Math.sin(time * 5));
   flags.forEach((f, k) => { f.rotation.y = Math.sin(time * 2 + k) * .25; });
@@ -1360,17 +1780,53 @@ function frame() {
     if (h.t > 2.2) h.s.visible = false;
   }
 
-  updateCamera(dt);
-  renderer.render(scene, camera);
-  updatePins();
+  // Tom's places
+  LOT.discs.forEach((s, i) => { s.material.color.copy(spotFree(i) ? goodCol : badCol); s.material.opacity = wake(LOT.spots[i], LOT.z) * (.75 + .25 * Math.sin(time * 4 + i)); });
+  FLIES.forEach(f => {
+    f.visible = binsMode === 'full';
+    if (f.visible) { const u = f.userData, a = time * u.sp + u.ph; f.position.set(-3.3 + Math.cos(a) * u.r, 1.25 + Math.sin(a * 1.7) * .18, u.z + Math.sin(a) * u.r); }
+  });
+  alarmShake = Math.max(0, alarmShake - dt);
+  alarm.rotation.z = alarmShake > 0 ? Math.sin(time * 70) * .2 : 0;
+  alarm.position.y = .69 + (alarmShake > 0 ? Math.abs(Math.sin(time * 35)) * .02 : 0);
+  house.front.visible = house.roof.visible = !house.open;
+  house.k = lerp(house.k, house.target, damp(6, dt));
+  tomFill.position.set(tom.vis ? tom.x : tcar.x, 2.6, (tom.vis ? tom.z : tcar.z) - .8); tomFill.intensity = clamp(G - .4, 0, 1) * (house.open ? .5 : 2.2);
+  house.light.intensity = house.k * 1.7; glassM.emissiveIntensity = house.k * 1.2;
+
+  updateCamera(dt); occlude();
   mt += dt; if (mt > .25) { mt = 0; tickMetrics(); }
+}
+const occRay = new T.Raycaster(), _od = new T.Vector3(), _rx = new T.Vector3();
+let occN = 0;
+function occlude() {
+  if (++occN % 3) return;
+  _rx.setFromMatrixColumn(camera.matrixWorld, 0);
+  const hits = new Set();
+  for (const [ox, oy] of [[0, 0], [-1.6, 0], [1.6, 0], [0, 1.4], [0, -.6]]) {   // a small cone around the target
+    _od.copy(cam.t).addScaledVector(_rx, ox).addScaledVector(camera.up, oy).sub(camera.position);
+    const dist = _od.length(); _od.normalize();
+    occRay.set(camera.position, _od); occRay.far = Math.max(.1, dist - .3);
+    for (const h of occRay.intersectObjects(OCC, false)) hits.add(h.object);
+  }
+  for (const m of OCC) m.visible = !hits.has(m);
+}
+function frame() {
+  const dt = Math.min(.05, clock.getDelta());
+  tick(dt); renderer.render(scene, camera); stepBubs(dt);
   requestAnimationFrame(frame);
 }
+// for rehearsing and testing: __city.go(n) jumps to a moment, __city.advance(s) plays s seconds at once
+window.__city = { go: n => { go(n); setView(B[beatI].view, true); }, advance(s) { for (let i = 0; i < s * 30; i++) { tick(1 / 30); stepBubs(1 / 30); occN = 2; } renderer.render(scene, camera); }, get beat() { return beatI; } };
 
-applyPalette(); resize(); setGoal(overview(), true); stepTod(1, true); setClock(INTRO.time, INTRO.tod); refreshSeen(); updateNotes();
+applyPalette(); resize(); stepTod(1, true);
 renderCars();
 for (let i = 0; i < 240; i++) { stepLights(1 / 30); stepCars(1 / 30); stepBus(1 / 30); stepBins(1 / 60); }
-tickMetrics();
+{
+  const h = parseInt(location.hash.slice(1), 10);
+  go(h >= 1 && h <= B.length ? h - 1 : 0);
+  setView(B[beatI].view, true); stepTod(1, true);
+}
+syncSound(); tickMetrics();
 requestAnimationFrame(frame);
-setTimeout(() => $('#enter').focus({ preventScroll: true }), 400);
 })();

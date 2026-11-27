@@ -2,95 +2,88 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>The City That Listens</title>
+<title>One Day, Two Towns</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Mrs+Saint+Delafield&display=swap">
 <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
 <div id="sky"></div>
-<canvas id="scene" aria-label="Animated 3D model of a town that can switch between ordinary and smart mode"></canvas>
-<div id="pins"></div>
+<canvas id="scene" aria-label="Animated 3D town where we follow Tom through one day, in an ordinary town and then in a smart town"></canvas>
+<div id="bubbles" aria-hidden="true"></div>
 
 <header class="top">
-  <div class="brand"><span class="sig">Yanis</span><span class="sub">the smart city</span></div>
-  <div class="count glass" aria-live="polite"><span><b id="seen">0</b> / <span id="total">11</span> <span class="wide">moments seen</span></span><span class="bar"><i id="seenbar"></i></span></div>
-  <nav class="actions" aria-label="Controls">
-    <button class="btn" id="b-tour"><span class="g">▶</span><span class="lblt">Start the day</span></button>
-    <button class="btn" id="b-book"><span class="g">☰</span><span class="lblt">Notebook</span></button>
-    <button class="btn" id="b-notes" aria-pressed="false"><span class="g">✎</span><span class="lblt">Notes</span></button>
-    <button class="btn opt" id="b-sound" aria-pressed="false"><span class="g">♪</span><span class="lblt">Sound</span></button>
-    <button class="btn opt" id="b-full" aria-label="Full screen"><span class="g">⤢</span></button>
-  </nav>
+  <div class="brand"><span class="sig">Yanis</span><span class="sub">One day, two towns</span></div>
+  <div class="chip" id="chip"><i class="dot"></i><b id="chip-a">Part 1</b><span id="chip-b">An ordinary town</span></div>
+  <div class="right">
+    <div class="day" id="day"><span class="clk" id="clk">06:45</span><span class="lost"><small>Time lost today</small><b id="lost">0 min</b></span></div>
+    <nav class="actions" aria-label="Controls">
+      <button class="btn" id="b-auto" aria-pressed="false" title="Autoplay (P)">▶<span class="lblt">Auto</span></button>
+      <button class="btn" id="b-fr" aria-pressed="false" title="French subtitles (T)">FR</button>
+      <button class="btn" id="b-sound" aria-pressed="false" title="Sound (M)">♪</button>
+      <button class="btn" id="b-full" aria-label="Full screen" title="Full screen (F)">⤢</button>
+    </nav>
+  </div>
 </header>
 
-<section class="hud glass" aria-label="City dashboard">
-  <div class="clockrow"><span class="clk" id="clk">18:00</span><span class="clkl" id="clk-l">Sunset</span></div>
-  <div class="switchrow">
-    <div><div class="t" id="mode-t">Ordinary town</div><div class="d" id="mode-d">Grey, polluted, stuck in traffic. Press S to wake it up.</div></div>
-    <button class="switch nudge" id="sw" role="switch" aria-checked="false" aria-label="Smart mode"><i></i></button>
-  </div>
-  <div class="meters">
-    <div class="meter"><div class="l">Cars waiting now</div><div class="v"><span id="m-wait">0</span><small>cars</small></div><canvas id="sp-wait"></canvas></div>
-    <div class="meter"><div class="l">Street lighting</div><div class="v"><span id="m-light">100</span><small>% power</small></div><canvas id="sp-light"></canvas></div>
-    <div class="meter"><div class="l">Bins overflowing</div><div class="v"><span id="m-bins">0</span><small>/ 6</small></div><canvas id="sp-bins"></canvas></div>
-    <div class="meter"><div class="l">Air pollution</div><div class="v"><span id="m-air">0</span><small>index</small></div><canvas id="sp-air"></canvas></div>
-  </div>
-  <div class="foot">Live numbers from the model · press <kbd>S</kbd> to compare</div>
+<section class="title" id="title">
+  <p class="eyebrow">English oral · Smart cities</p>
+  <h1>One day,<br>two towns.</h1>
+  <p class="q">How do we convince people that a smart city is good for their way of life?</p>
+  <p class="by"><span class="sig">Yanis</span><span>IT technician at the town hall · BTS CIEL</span></p>
+  <button class="cta" id="start">Follow Tom <span aria-hidden="true">→</span></button>
 </section>
 
-<p class="hint"><kbd>S</kbd> wake the town · <kbd>←</kbd> <kbd>→</kbd> moments of the day · drag to turn · scroll to zoom</p>
-
-<aside class="panel glass" id="panel" data-open="false" aria-live="polite">
-  <div class="phead"><span class="step" id="p-step">Moment 1 of 11</span><button class="x" id="p-close" aria-label="Back to the whole city">✕</button></div>
-  <div class="pbody" id="p-body"></div>
-  <div class="pfoot">
-    <button class="btn" id="p-prev">← Previous</button>
-    <span class="pos" id="p-pos">1 / 11</span>
-    <button class="btn" id="p-next">Next →</button>
+<section class="board" id="board" hidden aria-label="Tom's day in both towns">
+  <p class="eyebrow">Tom’s day, in our story</p>
+  <div class="cols">
+    <div class="col old"><h3><i class="dot"></i>Ordinary town</h3>
+      <ul>
+        <li><span>🚦 Red lights</span><b>20 min</b></li>
+        <li><span>🅿️ Looking for parking</span><b>12 min</b></li>
+        <li><span>🏛️ Town hall</span><b>30 min, for nothing</b></li>
+        <li><span>🗑️ Bins</span><b>overflowing</b></li>
+        <li><span>🌫️ Air at lunch</span><b>he coughs</b></li>
+        <li><span>💡 Walking home</span><b>a dark street</b></li>
+      </ul>
+      <p class="total"><small>Time lost</small><b>1 h 02</b></p>
+    </div>
+    <div class="col new"><h3><i class="dot"></i>Smart town</h3>
+      <ul>
+        <li><span>🚦 Red lights</span><b>12 min</b></li>
+        <li><span>🅿️ Looking for parking</span><b>0 min</b></li>
+        <li><span>🏛️ Town hall</span><b>2 min, online</b></li>
+        <li><span>🗑️ Bins</span><b>emptied when full</b></li>
+        <li><span>🌫️ Air at lunch</span><b>cleaner</b></li>
+        <li><span>💡 Walking home</span><b>lit when he passes</b></li>
+      </ul>
+      <p class="total"><small>Time lost</small><b>14 min</b></p>
+    </div>
   </div>
-</aside>
-
-<section class="notes glass" id="notes" hidden aria-label="Speaker notes">
-  <h3 class="lab"><span>Speaker notes · <span id="n-where">Introduction</span></span><kbd>N</kbd></h3>
-  <p id="n-text"></p>
+  <p class="note-src">The minutes are from our story. The real figures: Pittsburgh, −40% waiting at red lights · Dijon, a target of −65% energy for street lights.</p>
 </section>
 
-<div class="overlay" id="book" hidden>
-  <div class="book glass" role="dialog" aria-modal="true" aria-labelledby="book-h">
-    <div class="bookhead">
-      <h2 id="book-h">The mayor's notebook</h2>
-      <button class="x" id="book-close" aria-label="Close the notebook">✕</button>
-    </div>
-    <p class="intro">One day in the life of a resident, in the same town, ordinary or smart. Click a moment to go there.</p>
-    <div class="acts" id="book-acts"></div>
-    <p class="sources">Class documents: IESE Cities in Motion Index (2017) · Iberdrola, <em>What are the keys to turning a city into a smart city?</em> (2020), the 12 keys called "Document C" in the panels.<br>
-    Examples: Surtrac adaptive lights, Pittsburgh (figures reported by the Carnegie Mellon team) · OnDijon, Dijon Métropole (contract awarded in 2017) · Sidewalk Labs, Toronto Quayside (dropped in May 2020) · GDPR (EU, 2018).<br>
-    The numbers on the dashboard come from the model running on this page, not from a real town.</p>
-  </div>
-</div>
+<section class="final" id="final" hidden>
+  <p class="eyebrow">What a smart city is, for me</p>
+  <blockquote>Not a city full of sensors.<br>A city that gives you back <em>your time</em>, and protects <em>your privacy</em>.</blockquote>
+  <p class="by"><span class="sig">Yanis</span></p>
+</section>
 
-<div class="letter" id="letter">
-  <div class="paper glass" role="dialog" aria-modal="true" aria-labelledby="letter-h">
-    <p class="from">From the IT department · to the mayor's office</p>
-    <h1 id="letter-h">Mr. Mayor, here is how we convince people.</h1>
-    <p>You asked me how to convince people that a smart city is good for their way of life. My answer: don’t talk to them about sensors. Show them their own day.</p>
-    <p>This is our town today: grey, polluted, stuck in traffic. Press the switch and watch it wake up, street by street. Then follow one resident from 7:30 in the morning to 10:30 at night.</p>
-    <ul class="q">
-      <li><span>I</span>Which problems can a smart city solve?</li>
-      <li><span>II</span>How can we be sure the data is safe?</li>
-      <li class="main"><span>III</span>How do we convince people it is good for their way of life?</li>
-    </ul>
-    <div><div class="sign">Yanis</div><div class="role">IT technician, town hall</div></div>
-    <div class="row">
-      <button class="cta" id="enter">Enter the town <span aria-hidden="true">→</span></button>
-      <span class="tips"><kbd>S</kbd> wake the town · <kbd>←</kbd> <kbd>→</kbd> the day · <kbd>N</kbd> notes</span>
-    </div>
+<div class="rew" id="rew" hidden aria-hidden="true"><span>◀◀</span></div>
+
+<footer class="subs" id="subs" aria-live="polite">
+  <p class="meta" id="s-meta"></p>
+  <p class="line" id="s-line"></p>
+  <p class="fr" id="s-fr" hidden></p>
+  <p class="src" id="s-src" hidden></p>
+  <div class="nav">
+    <button class="btn round" id="b-prev" aria-label="Previous">←</button>
+    <div class="prog" id="prog"></div>
+    <button class="btn round" id="b-next" aria-label="Next">→</button>
   </div>
-</div>
+</footer>
 
 <div id="nogl" hidden><p>This model needs WebGL and the Three.js library.<br>Open this page in a recent Chrome, Edge, Firefox or Safari.</p></div>
 

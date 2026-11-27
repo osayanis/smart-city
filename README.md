@@ -1,11 +1,16 @@
-# The City That Listens
+# One Day, Two Towns
 
-Maquette 3D animée d'une ville, pour l'oral d'anglais « Smart city » (BTS CIEL).
-Elle répond surtout à la dernière question de la fiche : *How to convince people this is beneficial for their way of life?*
+Film 3D interactif pour l'oral d'anglais « Smart city » (BTS CIEL).
+Il répond à la dernière question de la fiche : *How to convince people this is beneficial for their way of life?*
 
-- La ville commence **ordinaire** : grise, dans le smog, bouchons, bacs pleins, lampadaires allumés pour rien.
-- La touche `S` la **réveille** : une onde part de l'endroit regardé et rallume la ville quartier par quartier (couleurs, air propre, feux et lampadaires intelligents, données protégées). On voit la frontière entre les deux villes avancer.
-- Le fil rouge est **la journée d'un habitant**, de 7h30 à 22h30, avec la lumière du jour qui change. Chaque moment compare *Today* et *Smart town*, puis dit ce que ça change pour lui. Le dernier moment donne la réponse : cinq façons de convaincre les gens.
+On suit **Tom** de son réveil jusqu'au coucher, deux fois :
+
+1. **Dans une ville ordinaire** (grise, polluée), il enchaîne les galères : il se réveille dans une maison froide, attend aux feux rouges, tourne pour trouver une place, mange à côté de poubelles qui débordent, tousse, trouve la mairie fermée et rentre dans une rue au lampadaire cassé. Il a perdu 1 h 02.
+2. **On rembobine.** Une onde rose réveille la ville rue après rue.
+3. **Dans la smart city**, c'est la même journée, mais cette fois tout s'arrange : chauffage intelligent, feux qui voient les voitures, place de parking indiquée par l'appli, poubelles vidées quand elles sont pleines, démarche en ligne, lampadaires qui s'allument au passage. Un capteur compte sans filmer, et les données sont protégées (RGPD). Il n'a perdu que 14 min.
+4. **Conclusion** : le tableau qui compare les deux journées, puis la définition.
+
+En bas de l'écran, la phrase en sous-titre est **ce qu'on dit à l'oral** (en anglais). Tom réagit avec des bulles (😤, BEEP!, cough!), et son téléphone reçoit des notifications.
 
 ## Lancer
 
@@ -16,19 +21,31 @@ Seules les polices viennent de Google Fonts : sans internet, le navigateur prend
 
 | Touche | Action |
 | --- | --- |
-| `→` / `←` | moment suivant / précédent (marche avec une télécommande de présentation) |
-| `S` | réveiller la ville (ou la rendormir) |
-| `N` | notes à dire pour le moment affiché |
-| `A` | simuler une cyberattaque sur la salle des serveurs |
-| `C` | carnet : les 11 moments de la journée |
+| `→` `Espace` ou clic | moment suivant (marche avec une télécommande de présentation) |
+| `←` | moment précédent |
+| `R` | rejouer le moment affiché |
+| `T` | afficher la traduction française sous la phrase (pour répéter) |
+| `P` | lecture automatique (pour répéter seul) |
+| `M` | son (réveil, klaxon, toux, notifications) |
 | `F` | plein écran |
-| `Échap` | revenir à la vue d'ensemble |
+| `Début` / `Fin` | premier / dernier moment |
+
+On peut ouvrir directement un moment avec son numéro : `index.html#18`.
+La souris tourne la caméra (glisser) et zoome (molette) ; le moment suivant remet le bon cadrage.
+
+## Les chiffres
+
+Les minutes perdues par Tom (1 h 02 et 14 min) viennent **de notre histoire**.
+Les deux chiffres réels sont cités avec leur source à l'écran :
+
+- **Pittsburgh** : environ −40 % d'attente aux feux rouges avec les feux Surtrac. Ces chiffres ont été donnés par l'équipe de Carnegie Mellon pour le premier pilote.
+- **Dijon** : un objectif de −65 % d'énergie pour l'éclairage, inscrit au contrat OnDijon (2017). C'est un objectif, pas un résultat mesuré.
 
 ## Structure
 
-- `index.html` : la page et ses textes d'interface
-- `css/style.css` : le style, repris de yanis.pro (polices, couleurs, verre)
-- `js/city.js` : la ville en Three.js, l'onde ordinaire → smart, l'heure du jour, la simulation (feux, voitures, bus, camion poubelle, lampadaires) et les 11 moments
+- `index.html` : la page, l'écran titre, le tableau final et la conclusion
+- `css/style.css` : le style repris de yanis.pro (polices, couleurs, verre), les sous-titres et les bulles
+- `js/city.js` : la ville en Three.js, la maison de Tom, Tom et ses poses, sa voiture, le parking, l'onde ordinaire → smart, l'heure du jour, la simulation (feux, voitures, bus, camion poubelle, lampadaires) et les 31 moments de l'histoire (tableau `B`)
 - `vendor/three.min.js` : Three.js r128
 
-Les chiffres du tableau de bord sont calculés par la simulation, pas tirés d'une vraie ville.
+Pour changer une phrase, il suffit de modifier `cap` (anglais) ou `fr` (français) dans le tableau `B` de `js/city.js`.
