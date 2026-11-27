@@ -16,7 +16,9 @@
     clearTimeout(sending);
     sending = setTimeout(() => fetch('/api/state', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(beat) }).catch(() => {}), 60);
   }
-  addEventListener('city:beat', e => { beat = e.detail; pushState(); syncPoll(); syncJoin(); });
+  // back to the title = a new audience: the polls start again from zero
+  const resetPolls = () => fetch('/api/reset', { method: 'POST' }).catch(() => {});
+  addEventListener('city:beat', e => { const was = beat && beat.id; beat = e.detail; pushState(); syncPoll(); syncJoin(); if (beat.id === 'title' && was !== 'title') resetPolls(); });
 
   /* QR codes */
   function setQr() {
@@ -79,7 +81,9 @@
 
   /* connection */
   const es = new EventSource('/api/events?role=board');
-  es.addEventListener('hello', e => { phoneUrl = JSON.parse(e.data).phoneUrl; liveBtn.hidden = false; setQr(); syncJoin(); pushState(); });
+  let firstHello = true;
+  es.addEventListener('hello', e => { phoneUrl = JSON.parse(e.data).phoneUrl; liveBtn.hidden = false; setQr(); syncJoin(); pushState(); if (firstHello && beat && beat.id === 'title') resetPolls(); firstHello = false; });
+  es.addEventListener('reset', () => { results = {}; box.dataset.key = ''; syncPoll(); });
   es.addEventListener('count', e => { const n = JSON.parse(e.data).phones; liveN.textContent = n; for (const el of document.querySelectorAll('[data-count]')) el.textContent = n; });
   es.addEventListener('results', e => { results = JSON.parse(e.data); syncPoll(); });
   es.addEventListener('react', e => react(JSON.parse(e.data).emoji));

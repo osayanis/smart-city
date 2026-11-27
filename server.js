@@ -26,6 +26,7 @@ function isThisComputer(req) {
 }
 
 /* shared state */
+let session = Date.now().toString(36);   // changes at every reset, so phones forget their old answers
 let state = null;                       // the moment on the board, sent by the board
 const votes = new Map();                // poll id -> Map(phone id -> choice)
 const lastReact = new Map();            // phone id -> time, to keep reactions reasonable
@@ -84,7 +85,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
       res.write('retry: 2000\n\n');
       const set = role === 'board' ? boards : phones; set.add(res);
-      send(res, 'hello', { phoneUrl: phoneUrl() });
+      send(res, 'hello', { phoneUrl: phoneUrl(), session });
       if (state) send(res, 'state', state);
       send(res, 'results', results());
       broadcast(boards, 'count', counts());
@@ -110,7 +111,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/api/reset' && req.method === 'POST') {
       if (!isThisComputer(req)) return json(res, 403, { error: 'no' });
-      votes.clear(); pushResults(); return json(res, 200, { ok: true });
+      votes.clear(); lastReact.clear(); session = Date.now().toString(36);
+      const r = results(), msg = { session };
+      broadcast(phones, 'reset', msg); broadcast(boards, 'reset', msg); broadcast(phones, 'results', r); broadcast(boards, 'results', r);
+      return json(res, 200, { ok: true });
     }
     if (p === '/api/vote' && req.method === 'POST') {
       const b = await readJson(req), poll = POLLS.find(q => q.id === b.poll), c = +b.choice;

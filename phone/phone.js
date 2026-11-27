@@ -139,6 +139,10 @@
     es.onerror = () => { status.classList.add('off'); $('#status-t').textContent = t('off'); };
     es.addEventListener('state', e => { state = JSON.parse(e.data); render(true); });
     es.addEventListener('results', e => { results = JSON.parse(e.data); renderPoll(); });
+    // a new session (the board went back to the start, or the server restarted): forget the old answers
+    const newSession = sid => { if (store.get('ph-session') !== sid) { store.set('ph-session', sid); myVotes = {}; store.set('ph-votes', myVotes); results = {}; renderPoll(); } };
+    es.addEventListener('hello', e => newSession(JSON.parse(e.data).session));
+    es.addEventListener('reset', e => newSession(JSON.parse(e.data).session));
   }
   setLang(lang);
   connect();
