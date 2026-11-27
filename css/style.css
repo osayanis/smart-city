@@ -175,6 +175,7 @@ body.rewinding #scene{filter:contrast(1.15) saturate(.4) hue-rotate(-10deg)}
 }
 @media (max-width:600px){
   .actions #b-auto,.actions #b-full{display:none}
+  .brand{display:none}   /* too narrow for the signature: the clock and the buttons matter more */
   .cols{grid-template-columns:1fr}
   .board{top:calc(50% - 40px)}
   .col{padding:12px 14px}

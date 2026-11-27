@@ -182,5 +182,5 @@ smart-city/
 <br>
 
 <div align="center">
-<sub>Fait par <a href="https://yanis.pro">Yanis</a> · BTS CIEL</sub>
+<sub>Fait par <a href="https://yanis.pro">Yanis</a> &amp; Théo · BTS CIEL</sub>
 </div>
