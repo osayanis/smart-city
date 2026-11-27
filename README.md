@@ -16,7 +16,7 @@
 ![Hors ligne](https://img.shields.io/badge/hors%20ligne-oui-8fbf9f?style=flat-square)
 ![Langue](https://img.shields.io/badge/oral-English-e8a46c?style=flat-square)
 
-[L'histoire](#-lhistoire) · [Lancer](#-lancer) · [Le public en direct](#-le-public-en-direct) · [Pendant l'oral](#%EF%B8%8F-pendant-loral) · [Les chiffres](#-les-chiffres) · [Comment c'est fait](#-comment-cest-fait)
+[L'histoire](#-lhistoire) · [Lancer](#-lancer) · [Le public en direct](#-le-public-en-direct) · [Pendant l'oral](#-pendant-loral) · [Les chiffres](#-les-chiffres) · [Comment c'est fait](#-comment-cest-fait)
 
 </div>
 
@@ -125,7 +125,7 @@ Le public scanne le QR code de l'écran titre et suit l'oral **moment par moment
 
 <br>
 
-## 🎙️ Pendant l'oral
+## 🎤 Pendant l'oral
 
 | Touche | Action |
 | :---: | --- |
