@@ -34,6 +34,24 @@
   };
   const t = k => T[lang][k];
 
+  /* haptics: short and rare. Android vibrates; on iPhone, Safari has no vibration API, so only taps get the
+     little "click" of a switch (iOS 18+). Automatic ones wait 2 s between each other, and need one touch first (browser rule). */
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const tick = (() => { const l = document.createElement('label'), i = document.createElement('input'); i.type = 'checkbox'; i.setAttribute('switch', '');
+    l.appendChild(i); l.setAttribute('aria-hidden', 'true'); l.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;left:-10px;top:0';
+    document.body.appendChild(l); return () => { try { l.click(); } catch (e) {} }; })();
+  let lastAuto = 0, touched = false;
+  addEventListener('pointerdown', () => { touched = true; }, { once: true, capture: true });
+  function buzz(pattern, fromTap = false) {
+    if (document.hidden) return;
+    if (!fromTap) { const now = Date.now(); if (reduced || !touched || now - lastAuto < 2000) return; lastAuto = now; }
+    if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+    else if (fromTap) tick();
+  }
+  const HAPTIC = { tap: 8, vote: 14, poll: [18, 70, 18], right: [12, 50, 12, 50, 24], wrong: 40, ended: [30, 80, 30] };
+  // a few moments of the story you can feel in your hand
+  const MOMENT_BUZZ = { 'p1-alarm': [20, 90, 20, 90, 20], 'p2-alarm': [20, 90, 20], 'p1-wait': [35], rewind: [10, 40, 10, 40, 10, 40, 10], wave: [60], 'p3-skip': [25], final: [15, 60, 15] };
+
   /* language */
   function setLang(l) {
     lang = l; document.documentElement.lang = l;
@@ -71,6 +89,7 @@
       $('#lost').hidden = s.lost == null; if (s.lost != null) $('#lost-v').textContent = fmtLost(s.lost);
       $('#tech').hidden = !x.tech; if (x.tech) $('#tech-t').textContent = x.tech[lang];
       $('#you').hidden = !x.you; if (x.you) $('#you-t').textContent = x.you[lang];
+      if (animate && shownId !== s.id && MOMENT_BUZZ[s.id]) buzz(MOMENT_BUZZ[s.id]);
       if (animate && shownId !== s.id) { const n = $('#now'); n.classList.remove('in'); void n.offsetWidth; n.classList.add('in'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     }
     shownId = s ? s.id : null;
@@ -84,7 +103,7 @@
   function renderPoll() {
     const p = currentPoll(), box = $('#poll');
     box.hidden = !p; if (!p) { shownPoll = null; return; }
-    if (shownPoll !== p.id) { shownPoll = p.id; if (navigator.vibrate) try { navigator.vibrate(25); } catch (e) {} }
+    if (shownPoll !== p.id) { shownPoll = p.id; lastAuto = 0; buzz(HAPTIC.poll); }
     const c = results[p.id] || p.options.map(() => 0), total = c.reduce((a, b) => a + b, 0), mine = myVotes[p.id];
     const voted = mine != null, quiz = p.answer != null;
     box.innerHTML = `<p class="pk">${quiz ? t('quiz') : t('poll')}</p><h2>${p.q[lang]}</h2><div class="opts">` +
@@ -102,6 +121,7 @@
     myVotes[p.id] = k; store.set('ph-votes', myVotes);
     results[p.id] = results[p.id] || p.options.map(() => 0);
     renderPoll(); wake();
+    buzz(p.answer == null ? HAPTIC.vote : k === p.answer ? HAPTIC.right : HAPTIC.wrong, true);
     fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid, s: token, poll: p.id, choice: k }) }).catch(() => {});
   }
 
@@ -123,7 +143,7 @@
     const r = b.getBoundingClientRect(), f = document.createElement('span'); f.className = 'fly'; f.textContent = b.dataset.e;
     f.style.left = (r.left + r.width / 2 - 17) + 'px'; f.style.top = (r.top - 10) + 'px'; document.body.appendChild(f);
     f.addEventListener('animationend', () => f.remove());
-    if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+    buzz(HAPTIC.tap, true);
     wake();
     fetch('/api/react', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pid, s: token, emoji: b.dataset.e }) }).catch(() => {});
   });
@@ -137,9 +157,11 @@
   const status = $('#status');
   // let go by the board (it started again) or opened from an old QR code
   function ended() {
+    const wasLive = !!(state || es);
     if (es) es.close(); es = null; state = null;
     myVotes = {}; store.set('ph-votes', myVotes);
     for (const id of ['welcome', 'now', 'tech', 'you', 'poll', 'calc', 'thanks', 'reacts']) $('#' + id).hidden = true;
+    if (wasLive) { lastAuto = 0; buzz(HAPTIC.ended); }
     $('#ended').hidden = false; $('#prog-i').style.width = '0';
     status.classList.add('off'); $('#status-t').textContent = t('ended');
     if (lock) { lock.release().catch(() => {}); lock = null; }
