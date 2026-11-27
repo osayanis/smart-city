@@ -196,6 +196,8 @@ body.rewinding #scene{filter:contrast(1.15) saturate(.4) hue-rotate(-10deg)}
 }
 
 /* live layer: the audience on their phones (only when served by server.js) */
+.btn.ghost{opacity:.45;background:transparent;border-color:transparent}
+.btn.ghost:hover,.btn.ghost:focus-visible{opacity:1}
 .btn.live{gap:5px;font-variant-numeric:tabular-nums;font-weight:650}
 .btn.live.off{opacity:.45}
 .join{position:fixed;right:max(32px,5vw);top:50%;transform:translateY(-50%);width:240px;padding:18px;border-radius:24px;background:var(--glass);border:1px solid var(--line);

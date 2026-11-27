@@ -10,7 +10,7 @@
   // a random id, only to count one vote per phone; it says nothing about you
   let pid = store.get('ph-id');
   if (!pid) { pid = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^a-zA-Z0-9-]/g, ''); store.set('ph-id', pid); }
-  let lang = store.get('ph-lang') || ((navigator.language || '').startsWith('fr') ? 'fr' : 'en');
+  let lang = store.get('ph-lang-choice') || 'en';   // the talk is in English: French only if someone asks for it
   let state = null, results = {}, myVotes = store.get('ph-votes') || {};
 
   const T = {
@@ -35,13 +35,13 @@
 
   /* language */
   function setLang(l) {
-    lang = l; store.set('ph-lang', l); document.documentElement.lang = l;
+    lang = l; document.documentElement.lang = l;
     $('#l-en').setAttribute('aria-pressed', String(l === 'en')); $('#l-fr').setAttribute('aria-pressed', String(l === 'fr'));
     for (const el of document.querySelectorAll('[data-t]')) el.textContent = t(el.dataset.t);
     $('#status-t').textContent = t($('#status').classList.contains('off') ? 'off' : 'live');
     render(false);
   }
-  $('#l-en').onclick = () => setLang('en'); $('#l-fr').onclick = () => setLang('fr');
+  $('#l-en').onclick = () => { store.set('ph-lang-choice', 'en'); setLang('en'); }; $('#l-fr').onclick = () => { store.set('ph-lang-choice', 'fr'); setLang('fr'); };
 
   /* the moment on the board */
   const idx = id => state && state.ids ? state.ids.indexOf(id) : -1;
@@ -55,6 +55,7 @@
   function render(animate = true) {
     const s = state, title = !s || s.id === 'title';
     $('#welcome').hidden = !title; $('#now').hidden = title;
+    if (title) $('#tech').hidden = $('#you').hidden = true;
     document.body.dataset.part = s ? s.part : 'intro';
     $('#prog-i').style.width = s && s.n ? ((s.i + 1) / s.n * 100).toFixed(1) + '%' : '0';
     if (!title) {

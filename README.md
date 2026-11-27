@@ -33,7 +33,7 @@ Le serveur (Node 18 ou plus, aucune dépendance à installer) ouvre le tableau s
 L'ordinateur et les téléphones doivent être sur le **même Wi-Fi**. Au premier lancement, macOS demande d'autoriser les connexions entrantes pour `node` : cliquer sur « Autoriser ».
 
 - **Au tableau** : le QR code est sur l'écran titre ; ensuite, `Q` (ou le bouton 📱 en haut, qui compte les téléphones connectés) l'affiche en grand. Les réactions du public s'envolent à droite, et les résultats des sondages s'affichent en haut à gauche pendant le moment concerné (`V` pour les masquer).
-- **Sur les téléphones** : la page suit le tableau moment par moment, avec la phrase dite (et sa traduction en FR), « Dans les coulisses » (comment ça marche) et « Pour vous » (ce que ça change), le temps perdu par Tom, 6 emojis pour réagir, 5 sondages et 2 quiz, puis à la fin un calcul « Et vous ? » du temps perdu par an.
+- **Sur les téléphones** (en anglais par défaut, quelle que soit la langue du téléphone ; le bouton FR reste possible) : la page suit le tableau moment par moment, avec la phrase dite, « Dans les coulisses » (comment ça marche) et « Pour vous » (ce que ça change), le temps perdu par Tom, 6 emojis pour réagir, 5 sondages et 2 quiz, puis à la fin un calcul « Et vous ? » du temps perdu par an.
 - **Vie privée** : pas de nom ni de compte ; les votes restent en mémoire dans le serveur et disparaissent quand on l'arrête. Seul l'ordinateur qui présente peut changer de moment.
 - Si les téléphones n'arrivent pas à se connecter, le Wi-Fi de l'école isole sans doute les appareils : utiliser le partage de connexion d'un téléphone (l'ordinateur et le public dessus), puis relancer `npm start`. Autre port : `PORT=8081 npm start`.
 
@@ -50,7 +50,7 @@ Ouverte directement (double-clic sur `index.html`), la présentation marche touj
 | `P` | lecture automatique (pour répéter seul) |
 | `M` | son (réveil, klaxon, toux, notifications) |
 | `F` | plein écran |
-| `Début` / `Fin` | premier / dernier moment |
+| `Début` / `Fin` | premier / dernier moment (le bouton discret ↺ en haut à droite ramène aussi au début) |
 | `Q` | QR code en grand pour les téléphones (mode interactif) |
 | `V` | masquer / afficher les résultats de sondage |
 

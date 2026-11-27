@@ -2192,7 +2192,7 @@ function toggleAuto() { auto = !auto; $('#b-auto').setAttribute('aria-pressed', 
 const btn = (id, fn) => $(id).addEventListener('click', e => { fn(); e.currentTarget.blur(); });
 btn('#b-fr', toggleFr); btn('#b-sound', toggleSound); btn('#b-auto', toggleAuto); btn('#b-prev', prev); btn('#b-next', next);
 btn('#b-full', () => { if (document.fullscreenElement) document.exitFullscreen?.(); else root.requestFullscreen?.().catch(() => {}); });
-btn('#start', next);
+btn('#start', next); btn('#b-home', () => go(0));
 { // sound starts with the first key or click (browsers only allow audio after a gesture)
   const first = () => { removeEventListener('keydown', first, true); removeEventListener('pointerdown', first, true); if (store.get('city-sound') !== false && !Sound.on) { Sound.toggle(); syncSound(); } };
   addEventListener('keydown', first, true); addEventListener('pointerdown', first, true);
